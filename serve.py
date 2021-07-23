@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import traceback
+import os
 
 from aiohttp import web
 from aiohttp.web_middlewares import normalize_path_middleware
@@ -383,4 +384,9 @@ if __name__ == "__main__":
     print("Registered routes:")
     for route in routes:  # type: RouteDef
         print('- %s %s' % (route.method, route.path))
-    web.run_app(app, port=8000)
+    default_port = os.getenv('PORT')
+    print('Default PORT: %s' % (default_port))
+    if default_port:
+        web.run_app(app, port=default_port)
+    else:
+        web.run_app(app, port=8000)
