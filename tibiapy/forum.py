@@ -1,13 +1,14 @@
+"""Events related to the forum section."""
 import datetime
 import re
 from typing import List, Optional
 
 import bs4
 
-from tibiapy import abc, errors, GuildMembership
+from tibiapy import GuildMembership, abc, errors
 from tibiapy.enums import ThreadStatus, Vocation
-from tibiapy.utils import convert_line_breaks, get_tibia_url, parse_tibia_datetime, parse_tibia_forum_datetime, \
-    parse_tibiacom_content, split_list, try_enum
+from tibiapy.utils import (convert_line_breaks, get_tibia_url, parse_tibia_datetime, parse_tibia_forum_datetime,
+                           parse_tibiacom_content, split_list, try_enum)
 
 __all__ = (
     'CMPost',
@@ -18,9 +19,9 @@ __all__ = (
     'ForumPost',
     'ForumThread',
     'LastPost',
-    'ListedAnnouncement',
-    'ListedBoard',
-    'ListedThread',
+    'AnnouncementEntry',
+    'BoardEntry',
+    'ThreadEntry',
     'ForumAuthor',
 )
 
@@ -99,7 +100,8 @@ class CMPostArchive(abc.Serializable):
     results_count: :class:`int`
         The total number of results available in the selected date range.
     posts: :class:`list` of :class:`CMPost`
-        The list of posts for the selected range."""
+        The list of posts for the selected range.
+    """
 
     __slots__ = (
         "start_date",
@@ -144,7 +146,7 @@ class CMPostArchive(abc.Serializable):
     # region Public Methods
 
     def get_page_url(self, page):
-        """Gets the URL of the CM Post Archive at a specific page, with the current date parameters.
+        """Get the URL of the CM Post Archive at a specific page, with the current date parameters.
 
         Parameters
         ----------
@@ -162,7 +164,7 @@ class CMPostArchive(abc.Serializable):
 
     @classmethod
     def get_url(cls, start_date, end_date, page=1):
-        """Gets the URL to the CM Post Archive for the given date range.
+        """Get the URL to the CM Post Archive for the given date range.
 
         Parameters
         ----------
@@ -199,7 +201,7 @@ class CMPostArchive(abc.Serializable):
 
     @classmethod
     def from_content(cls, content):
-        """Parses the content of the CM Post Archive page from Tibia.com
+        """Parse the content of the CM Post Archive page from Tibia.com.
 
         Parameters
         ----------
@@ -221,7 +223,7 @@ class CMPostArchive(abc.Serializable):
         form = parsed_content.find("form")
         try:
             start_month_selector, start_day_selector, start_year_selector, \
-             end_month_selector, end_day_selector, end_year_selector = form.find_all("select")
+            end_month_selector, end_day_selector, end_year_selector = form.find_all("select")
             start_date = cls._get_selected_date(start_month_selector, start_day_selector, start_year_selector)
             end_date = cls._get_selected_date(end_month_selector, end_day_selector, end_year_selector)
         except (AttributeError, ValueError) as e:
@@ -271,8 +273,8 @@ class CMPostArchive(abc.Serializable):
 
     @classmethod
     def _get_selected_date(cls, month_selector, day_selector, year_selector):
-        """Gets the date made from the selected options in the selectors.
-        
+        """Get the date made from the selected options in the selectors.
+
         Parameters
         ----------
         month_selector: :class:`bs4.Tag`
@@ -281,6 +283,7 @@ class CMPostArchive(abc.Serializable):
             The day selector.
         year_selector: :class:`bs4.Tag`
             The year selector.
+
         Returns
         -------
         :class:`datetime.date`
@@ -298,7 +301,7 @@ class CMPostArchive(abc.Serializable):
 
 
 class ForumAnnouncement(abc.BaseAnnouncement, abc.Serializable):
-    """Represent's a forum announcement.
+    """Represents a forum announcement.
 
     These are a special kind of thread that are shown at the top of boards.
     They cannot be replied to and they show no view counts.
@@ -359,7 +362,7 @@ class ForumAnnouncement(abc.BaseAnnouncement, abc.Serializable):
 
     @classmethod
     def from_content(cls, content, announcement_id=0):
-        """Parses the content of an announcement's page from Tibia.com
+        """Parse the content of an announcement's page from Tibia.com.
 
         Parameters
         ----------
@@ -415,7 +418,6 @@ class ForumAnnouncement(abc.BaseAnnouncement, abc.Serializable):
         announcement.content = announcement_content
 
         announcement.start_date, announcement.end_date = (parse_tibia_forum_datetime(date, offset) for date in dates)
-
         return announcement
 
 
@@ -481,7 +483,7 @@ class ForumAuthor(abc.BaseCharacter, abc.Serializable):
 
     @classmethod
     def _parse_author_table(cls, character_info_container):
-        """Parses the table containing the author's information.
+        """Parse the table containing the author's information.
 
         Parameters
         ----------
@@ -556,14 +558,14 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
     current_page: :class:`int`
         The current page being viewed.
     pages: :class:`int`
-        The number of total_pages the board has for the current display range.
+        The number of pages the board has for the current display range.
     age: :class:`ìnt`
         The maximum age of the displayed threads, in days.
 
         -1 means all threads will be shown.
-    announcements: list of :class:`ListedAnnouncement`
+    announcements: list of :class:`AnnouncementEntry`
         The list of announcements currently visible.
-    threads: list of :class:`ListedThread`
+    threads: list of :class:`ThreadEntry`
         The list of threads currently visible.
     """
 
@@ -574,8 +576,8 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
         self.page: int = kwargs.get("page", 1)
         self.total_pages: int = kwargs.get("total_pages", 1)
         self.age: int = kwargs.get("age", 30)
-        self.announcements: List[ListedAnnouncement] = kwargs.get("announcements", [])
-        self.threads: List[ListedThread] = kwargs.get("threads", [])
+        self.announcements: List[AnnouncementEntry] = kwargs.get("announcements", [])
+        self.threads: List[ThreadEntry] = kwargs.get("threads", [])
 
     __slots__ = (
         "name",
@@ -612,7 +614,7 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
     # region Public Methods
 
     def get_page_url(self, page):
-        """Gets the URL to a given page of the board.
+        """Get the URL to a given page of the board.
 
         Parameters
         ----------
@@ -630,7 +632,7 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
 
     @classmethod
     def from_content(cls, content):
-        """Parses the board's HTML content from Tibia.com.
+        """Parse the board's HTML content from Tibia.com.
 
         Parameters
         ----------
@@ -684,12 +686,12 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
                 continue
 
             entry = cls._parse_thread_row(columns)
-            if isinstance(entry, ListedThread):
+            if isinstance(entry, ThreadEntry):
                 board.threads.append(entry)
                 cip_border = thread_row.find("div", attrs={"class": "CipBorder"})
                 if cip_border:
                     entry.golden_frame = True
-            elif isinstance(entry, ListedAnnouncement):
+            elif isinstance(entry, AnnouncementEntry):
                 board.announcements.append(entry)
 
         return board
@@ -700,7 +702,7 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
 
     @classmethod
     def _parse_thread_row(cls, columns):
-        """Parses the thread row, containing a single thread or announcement.
+        """Parse the thread row, containing a single thread or announcement.
 
         Parameters
         ----------
@@ -709,7 +711,7 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
 
         Returns
         -------
-        :class:`ListedThread` or :class:`ListedAnnouncement`
+        :class:`ThreadEntry` or :class:`AnnouncementEntry`
         """
         # First Column: Thread's status
         status = None
@@ -736,7 +738,7 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
         try:
             thread_link, *page_links = thread_column.find_all("a")
         except ValueError:
-            return
+            return None
         if page_links:
             last_page_link = page_links[-1]
             pages = int(page_number_regex.search(last_page_link["href"]).group(1))
@@ -757,13 +759,18 @@ class ForumBoard(abc.BaseBoard, abc.Serializable):
             last_post_column = columns[6]
             last_post = LastPost._parse_column(last_post_column)
 
-            entry = ListedThread(title=title, thread_id=thread_id, thread_starter=thread_starter, replies=replies,
-                                 views=views, last_post=last_post, emoticon=emoticon, status=status, pages=pages,
-                                 status_icon=status_icon)
+            traded = False
+            if "(traded)" in thread_starter:
+                traded = True
+                thread_starter = thread_starter.replace("(traded)", "").strip()
+
+            entry = ThreadEntry(title=title, thread_id=thread_id, thread_starter=thread_starter, replies=replies,
+                                views=views, last_post=last_post, emoticon=emoticon, status=status, pages=pages,
+                                status_icon=status_icon, thread_starter_traded=traded)
         else:
             title = title.replace("Announcement: ", "")
             announcement_id = int(announcement_id_regex.search(thread_link["href"]).group(1))
-            entry = ListedAnnouncement(title=title, announcement_id=announcement_id, announcement_author=thread_starter)
+            entry = AnnouncementEntry(title=title, announcement_id=announcement_id, announcement_author=thread_starter)
         return entry
 
     # endregion
@@ -788,8 +795,8 @@ class ForumEmoticon(abc.Serializable):
     )
 
     def __init__(self, name, url):
-        self.name = name
-        self.url = url
+        self.name: str = name
+        self.url: str = url
 
     def __repr__(self):
         return f"<{self.__class__.__name__} name={self.name!r} url={self.url!r}>"
@@ -839,17 +846,17 @@ class ForumPost(abc.BasePost, abc.Serializable):
     )
 
     def __init__(self, **kwargs):
-        self.author = kwargs.get("author")
-        self.emoticon = kwargs.get("emoticon")
-        self.title = kwargs.get("title")
-        self.content = kwargs.get("content")
-        self.signature = kwargs.get("signature")
-        self.emoticon = kwargs.get("emoticon")
-        self.post_id = kwargs.get("post_id")
-        self.golden_frame = kwargs.get("golden_frame")
-        self.posted_date = kwargs.get("posted_date")
-        self.edited_date = kwargs.get("edited_date")
-        self.edited_by = kwargs.get("edited_by")
+        self.author: ForumAuthor = kwargs.get("author")
+        self.emoticon: Optional[ForumEmoticon] = kwargs.get("emoticon")
+        self.title: Optional[str] = kwargs.get("title")
+        self.content: str = kwargs.get("content")
+        self.signature: Optional[str] = kwargs.get("signature")
+        self.emoticon: Optional[ForumEmoticon] = kwargs.get("emoticon")
+        self.post_id: int = kwargs.get("post_id")
+        self.golden_frame: bool = kwargs.get("golden_frame")
+        self.posted_date: datetime.datetime = kwargs.get("posted_date")
+        self.edited_date: Optional[datetime.datetime] = kwargs.get("edited_date")
+        self.edited_by: str = kwargs.get("edited_by")
 
     def __repr__(self):
         return f"<{self.__class__.__name__} title={self.title!r} post_id={self.post_id}>"
@@ -889,6 +896,7 @@ class ForumThread(abc.BaseThread, abc.Serializable):
 
         When a post is fetched directly, the thread that contains it is displayed, anchored to the specific post.
     """
+
     __slots__ = (
         "title",
         "thread_id",
@@ -950,7 +958,7 @@ class ForumThread(abc.BaseThread, abc.Serializable):
     # region Public Methods
 
     def get_page_url(self, page):
-        """Gets the URL to a given page of the board.
+        """Get the URL to a given page of the board.
 
         Parameters
         ----------
@@ -968,7 +976,7 @@ class ForumThread(abc.BaseThread, abc.Serializable):
 
     @classmethod
     def from_content(cls, content):
-        """Creates an instance of the class from the html content of the thread's page.
+        """Create an instance of the class from the html content of the thread's page.
 
         Parameters
         ----------
@@ -1050,7 +1058,7 @@ class ForumThread(abc.BaseThread, abc.Serializable):
 
     @classmethod
     def _parse_post_table(cls, post_table, offset=1):
-        """Parses the table containing a single posts, extracting its information.
+        """Parse the table containing a single posts, extracting its information.
 
         Parameters
         ----------
@@ -1106,10 +1114,9 @@ class ForumThread(abc.BaseThread, abc.Serializable):
         post_details = post_table.find('div', attrs={"class": "AdditionalBox"})
         post_number = post_details.text.replace("Post #", "")
         post_id = int(post_number)
-        post = ForumPost(author=post_author, content=content, signature=signature, posted_date=posted_date,
+        return ForumPost(author=post_author, content=content, signature=signature, posted_date=posted_date,
                          edited_date=edited_date, edited_by=edited_by, post_id=post_id, title=title, emoticon=emoticon,
                          golden_frame=golden_frame is not None)
-        return post
 
     # endregion
 
@@ -1129,19 +1136,24 @@ class LastPost(abc.BasePost, abc.Serializable):
         The date when the last post was made.
     deleted: :class:`bool`
         Whether the last post's author is a character that is already deleted.
+    traded: :class:`bool`
+        Whether the last post's author was recently traded.
+        .. versionadded:: 5.0.0
     """
 
-    def __init__(self, author, post_id, date, *, deleted=False):
+    def __init__(self, author, post_id, date, *, deleted=False, traded=False):
         self.author: str = author
         self.post_id: int = post_id
         self.date: datetime.datetime = date
         self.deleted: bool = deleted
+        self.traded: bool = traded
 
     __slots__ = (
         "author",
         "post_id",
         "date",
         "deleted",
+        "traded",
     )
 
     def __repr__(self):
@@ -1154,7 +1166,7 @@ class LastPost(abc.BasePost, abc.Serializable):
 
     @classmethod
     def _parse_column(cls, last_post_column, offset=1):
-        """Parses the column containing the last post information and extracts its data.
+        """Parse the column containing the last post information and extracts its data.
 
         Parameters
         ----------
@@ -1181,11 +1193,14 @@ class LastPost(abc.BasePost, abc.Serializable):
         author_link = last_post_author_tag.find("a")
         deleted = author_link is None
         author = last_post_author_tag.text.replace("by", "", 1).replace("\xa0", " ").strip()
+        traded = False
+        if "(traded)" in author:
+            author = author.replace("(traded)", "").strip()
+            traded = True
+        return cls(author, post_id, last_post_date, deleted=deleted, traded=traded)
 
-        return cls(author, post_id, last_post_date, deleted=deleted)
 
-
-class ListedAnnouncement(abc.BaseAnnouncement, abc.Serializable):
+class AnnouncementEntry(abc.BaseAnnouncement, abc.Serializable):
     """Represents an announcement in the forum boards.
 
     .. versionadded:: 3.0.0
@@ -1201,9 +1216,9 @@ class ListedAnnouncement(abc.BaseAnnouncement, abc.Serializable):
     """
 
     def __init__(self, **kwargs):
-        self.title = kwargs.get("title")
-        self.announcement_id = kwargs.get("announcement_id")
-        self.announcement_author = kwargs.get("announcement_author")
+        self.title: str = kwargs.get("title")
+        self.announcement_id: int = kwargs.get("announcement_id")
+        self.announcement_author: str = kwargs.get("announcement_author")
 
     __slots__ = (
         "title",
@@ -1212,11 +1227,11 @@ class ListedAnnouncement(abc.BaseAnnouncement, abc.Serializable):
     )
 
     def __repr__(self):
-        return "<{0.__class__.__name__} title={0.title!r} announcement_id={0.announcement_id} " \
-               "announcement_author={0.announcement_author!r}>".format(self)
+        return f"<{self.__class__.__name__} title={self.title!r} announcement_id={self.announcement_id} " \
+               f"announcement_author={self.announcement_author!r}>"
 
 
-class ListedBoard(abc.BaseBoard, abc.Serializable):
+class BoardEntry(abc.BaseBoard, abc.Serializable):
     """Represents a board in the list of boards.
 
     This is the board information available when viewing a section (e.g. World, Trade, Community)
@@ -1238,6 +1253,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
     last_post: :class:`LastPost`
         The information of the last post made in this board.
     """
+
     def __init__(self, **kwargs):
         self.name: str = kwargs.get("name")
         self.board_id: int = kwargs.get("board_id")
@@ -1262,7 +1278,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
     # region Public Methods
     @classmethod
     def list_from_content(cls, content):
-        """Parses the content of a board list Tibia.com into a list of boards.
+        """Parse the content of a board list Tibia.com into a list of boards.
 
         Parameters
         ----------
@@ -1271,7 +1287,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
 
         Returns
         -------
-        :class:`list` of :class:`ListedBoard`
+        :class:`list` of :class:`BoardEntry`
 
         Raises
         ------
@@ -1303,7 +1319,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
     # region Private Methods
     @classmethod
     def _parse_board_row(cls, board_row, offset=1):
-        """Parses a row containing a board and extracts its information.
+        """Parse a row containing a board and extracts its information.
 
         Parameters
         ----------
@@ -1315,7 +1331,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
 
         Returns
         -------
-        :class:`ListedBoard`
+        :class:`BoardEntry`
             The board contained in this row.
         """
         columns = board_row.find_all("td")
@@ -1341,7 +1357,7 @@ class ListedBoard(abc.BaseBoard, abc.Serializable):
     # endregion
 
 
-class ListedThread(abc.BaseThread, abc.Serializable):
+class ThreadEntry(abc.BaseThread, abc.Serializable):
     """Represents a thread in a forum board.
 
     .. versionadded:: 3.0.0
@@ -1352,8 +1368,11 @@ class ListedThread(abc.BaseThread, abc.Serializable):
         The title of the thread.
     thread_id: :class:`int`
         The internal id of the thread.
-    thread_started: :class:`str`
+    thread_starter: :class:`str`
         The character that started the thread.
+    thread_starter_traded: :class:`bool`
+        Whether the thread starter was recently traded or not.
+        .. versionadded:: 5.0.0
     replies: :class:`int`
         The number of replies.
     views: :class:`int`
@@ -1367,30 +1386,32 @@ class ListedThread(abc.BaseThread, abc.Serializable):
     emoticon: :class:`ForumEmoticon`
         The emoticon used for the thread.
     pages: :class:`int`
-        The number of total_pages the thread has.
+        The number of pages the thread has.
     golden_frame: :class:`bool`
         Whether the thread has a gold frame or not.
 
         In the Proposals board, the gold frame indicates that a staff member has replied in the thread.
     """
+
     def __init__(self, **kwargs):
-        self.title = kwargs.get("title")
-        self.thread_id = kwargs.get("thread_id")
-        self.thread_starter = kwargs.get("thread_starter")
-        self.replies = kwargs.get("replies")
-        self.views = kwargs.get("views")
-        self.last_post = kwargs.get("last_post")
-        self.status = kwargs.get("status")
-        self.status_icon = kwargs.get("status_icon")
-        self.icon = kwargs.get("icon")
-        self.emoticon = kwargs.get("emoticon")
-        self.pages = kwargs.get("total_pages", 1)
-        self.golden_frame = kwargs.get("golden_frame", False)
+        self.title: str = kwargs.get("title")
+        self.thread_id: int = kwargs.get("thread_id")
+        self.thread_starter: str = kwargs.get("thread_starter")
+        self.thread_starter_traded: bool = kwargs.get("thread_starter_traded")
+        self.replies: int = kwargs.get("replies")
+        self.views: int = kwargs.get("views")
+        self.last_post: LastPost = kwargs.get("last_post")
+        self.status: ThreadStatus = kwargs.get("status")
+        self.status_icon: Optional[str] = kwargs.get("status_icon")
+        self.emoticon: Optional[ForumEmoticon] = kwargs.get("emoticon")
+        self.pages: int = kwargs.get("pages", 1)
+        self.golden_frame: bool = kwargs.get("golden_frame", False)
 
     __slots__ = (
         "title",
         "thread_id",
         "thread_starter",
+        "thread_starter_traded",
         "replies",
         "views",
         "last_post",
