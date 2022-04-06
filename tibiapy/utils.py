@@ -6,7 +6,7 @@ import re
 import urllib.parse
 import warnings
 from collections import OrderedDict
-from typing import Optional, Tuple, Type, TypeVar, Union
+from typing import Dict, Optional, Tuple, Type, TypeVar, Union
 
 import bs4
 
@@ -149,6 +149,63 @@ def parse_integer(number: str, default: Optional[int] = 0):
         return int(number)
     except ValueError:
         return default
+
+
+def parse_link_info(link_tag):
+    """Parse the information of a link tag.
+
+    It will parse the link's content, target URL as well as the query parameters where applicable.
+
+    Parameters
+    ----------
+    link_tag: :class:`bs4.Tag`
+        The link tag object.
+
+    Returns
+    -------
+    :class:`dict`:
+        A dictionary containing the link's data.
+
+    Examples
+    --------
+    >>> # <a href="https://www.tibia.com/community/?subtopic=houses&page=view&houseid=55302&world=Gladera">House</>
+    >>> parse_link_info(link_tag)
+    {
+        "text": "House",
+        "url": "https://www.tibia.com/community/?subtopic=houses&page=view&houseid=55302&world=Gladera"
+        "query": {
+            "subtopic": "houses",
+            "page": "view",
+            "houseid": "55302",
+            "world": "Gladera"
+        }
+    }
+
+    When parsing links that have multiple query parameters, they are displayed as a list.
+    Empty parameters are omitted.
+
+    >>> # <a href="https://example.com/?world=&beprotection=-1&worldtypes[]=0&worldtypes[]=3">Link</a>
+    >>> parse_link_info(link_tag)
+    {
+        "text": "Link",
+        "url": "https://example.com/?world=&beprotection=-1&worldtypes[]=0&worldtypes[]=3"
+        "query": {
+            "beprotection": "-1",
+            "worldtypes": ["0", "3"]
+        }
+    }
+    """
+    url = link_tag["href"]
+    info = {"text": link_tag.text.strip(), "url": url, "query": {}}
+    parsed_url = urllib.parse.urlparse(url)
+    if parsed_url.query:
+        query_params = urllib.parse.parse_qs(parsed_url.query)
+        for param, value in query_params.items():
+            if len(value) == 1:
+                info["query"][param] = value[0]
+            else:
+                info["query"][param] = value
+    return info
 
 
 def parse_tibia_datetime(datetime_str) -> Optional[datetime.datetime]:
@@ -391,6 +448,32 @@ def parse_tibiacom_content(content, *, html_class="BoxContent", tag="div", build
     """
     strainer = bs4.SoupStrainer(tag, class_=html_class) if builder != "html5lib" else None
     return bs4.BeautifulSoup(content.replace('ISO-8859-1', 'utf-8', 1), builder, parse_only=strainer)
+
+
+def parse_tibiacom_tables(parsed_content) -> Dict[str, bs4.Tag]:
+    """Parse tables from Tibia.com into a mapping by the tables title.
+
+    This is used for the table style used in Tibia.com, where a table is wrapped in a container with a title.
+
+    Parameters
+    ----------
+    parsed_content: :class:`bs4.BeautifulSoup`
+        The content to find the tables in.
+
+    Returns
+    -------
+    :class:`dict`
+        A dictionary mapping the container titles and the contained table.
+    """
+    table_containers = parsed_content.find_all("div", attrs={"class": "TableContainer"})
+    tables = {}
+    for table_container in table_containers:
+        text_tag = table_container.find("div", attrs={"class": "Text"})
+        table = table_container.find("table", attrs={"class": "TableContent"})
+        if not table:
+            continue
+        tables[text_tag.text.strip()] = table
+    return tables
 
 
 T = TypeVar('T')

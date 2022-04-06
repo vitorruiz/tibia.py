@@ -180,7 +180,7 @@ class AuctionFilters(abc.Serializable):
         filters = AuctionFilters()
         forms = table.find_all("form")
         data = parse_form_data(forms[0], include_options=True)
-        data_search = parse_form_data(forms[1], include_options=True)
+
         filters.world = data["filter_world"]
         filters.available_worlds = [w for w in data.get("__options__", {}).get("filter_world", []) if "(" not in w]
         filters.pvp_type = try_enum(PvpTypeFilter, parse_integer(data.get("filter_worldpvptype"), None))
@@ -193,8 +193,10 @@ class AuctionFilters(abc.Serializable):
         filters.max_skill_level = parse_integer(data.get("filter_skillrangeto"), None)
         filters.order_by = try_enum(AuctionOrderBy, parse_integer(data.get("order_column"), None))
         filters.order = try_enum(AuctionOrder, parse_integer(data.get("order_direction"), None))
-        filters.search_string = data_search.get("searchstring")
-        filters.search_type = try_enum(AuctionSearchType, parse_integer(data_search.get("searchtype"), None))
+        if len(forms) > 1:
+            data_search = parse_form_data(forms[1], include_options=True)
+            filters.search_string = data_search.get("searchstring")
+            filters.search_type = try_enum(AuctionSearchType, parse_integer(data_search.get("searchtype"), None))
         return filters
 
 
@@ -867,6 +869,10 @@ class Auction(AuctionEntry):
         The number of hireling jobs the character has.
     hireling_outfits: :class:`int`
         The number of hireling outfits the character has.
+    exalted_dust: :class:`int`
+        The amount of exalted dust the character has.
+    exalted_dust_limit: :class:`int`
+        The dust limit of the character.
     items: :class:`ItemSummary`
         The items the character has across inventory, depot and item stash.
     store_items: :class:`ItemSummary`
@@ -928,6 +934,8 @@ class Auction(AuctionEntry):
         self.hirelings: int = kwargs.get("hirelings", 0)
         self.hireling_jobs: int = kwargs.get("hireling_jobs", 0)
         self.hireling_outfits: int = kwargs.get("hireling_outfits", 0)
+        self.exalted_dust: int = kwargs.get("exalted_dust", 0)
+        self.exalted_dust_limit: int = kwargs.get("exalted_dust_limit", 0)
         self.items: ItemSummary = kwargs.get("items")
         self.store_items: ItemSummary = kwargs.get("store_items")
         self.mounts: Mounts = kwargs.get("mounts")
@@ -969,6 +977,8 @@ class Auction(AuctionEntry):
         "hirelings",
         "hireling_jobs",
         "hireling_outfits",
+        "exalted_dust",
+        "exalted_dust_limit",
         "items",
         "store_items",
         "mounts",
@@ -1310,6 +1320,11 @@ class Auction(AuctionEntry):
         self.hirelings = parse_integer(hirelings_data.get("hirelings", ""))
         self.hireling_jobs = parse_integer(hirelings_data.get("hireling_jobs", ""))
         self.hireling_outfits = parse_integer(hirelings_data.get("hireling_outfits", ""))
+        if len(content_containers) == 9:
+            dust_data = self._parse_data_table(content_containers[8])
+            dust_values = dust_data.get("exalted_dust", "0/0").split("/")
+            self.exalted_dust = parse_integer(dust_values[0])
+            self.exalted_dust_limit = parse_integer(dust_values[1])
     # endregion
 
 

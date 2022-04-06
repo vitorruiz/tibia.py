@@ -6,6 +6,39 @@ Changelog
     Due to this library relying on external content, older versions are not guaranteed to work.
     Try to always use the latest version.
 
+.. v.5.2.1
+
+5.2.1 (2022-03-01)
+==================
+- Fixed bug in news ticker with a ``div`` tag failing to parse.
+- Updated code to detect the discussion thread link.
+
+.. v5.2.0
+
+5.2.0 (2021-12-31)
+==================
+- Added ``exalted_dust`` and ``exalted_dust_limit`` attributes to auctions.
+
+
+.. v5.1.0
+
+5.1.0 (2021-09-16)
+==================
+- Added ``traded`` attribute to death killers, to indicate that the killer was traded after the death occurred.
+- Properly handle deaths caused by summons of traded characters.
+
+.. v5.0.1
+
+5.0.1 (2021-08-26)
+==================
+- Fixed many sections not being parsed correctly due to changes to Tibia.com.
+    - Houses list
+    - News list
+    - Spells section
+    - Forums section
+- Fixed character's houses failing to parse due to a bug in the display in Tibia.com.
+    - Temporarily disabling this attribute.
+
 .. v5.0.0
 
 5.0.0 (2021-08-06)
