@@ -6,7 +6,44 @@ Changelog
     Due to this library relying on external content, older versions are not guaranteed to work.
     Try to always use the latest version.
 
-.. v.5.2.1
+
+.. v5.5.2
+
+5.5.2 (2022-09-02)
+==================
+- Fixed Houses section not parsing due to a change in the filters table.
+- Fixed status parameter not generating the correct URL in the houses section.
+
+.. v5.5.1
+
+5.5.1 (2022-08-02)
+==================
+- Adjusted parsing to support the changes related to mobile devices introduced on the day of this release. The following sections were affected:
+    - Highscores
+    - News
+    - Forums
+    - Spells
+
+.. v5.5.0
+
+5.5.0 (2022-07-27)
+==================
+- Added ``BOSS_POINTS`` to ``Category`` in highscores.
+
+
+.. v5.4.0
+
+5.4.0 (2022-07-23)
+==================
+- Added ``boss_points`` and ``bosstiary_progress`` to auctions.
+
+.. v5.3.0
+
+5.3.0 (2022-07-22)
+==================
+- Added support for Boostable Bosses.
+
+.. v5.2.1
 
 5.2.1 (2022-03-01)
 ==================

@@ -165,7 +165,7 @@ class Highscores(abc.Serializable):
         parsed_content = parse_tibiacom_content(content)
         form = parsed_content.find("form")
         tables = cls._parse_tables(parsed_content)
-        if form is None:
+        if form is None or "Highscores" not in tables:
             if "Error" in tables and "The world doesn't exist!" in tables["Error"].text:
                 return None
             raise InvalidContent("content does is not from the highscores section of Tibia.com")
@@ -234,6 +234,8 @@ class Highscores(abc.Serializable):
             cols_raw = row.find_all('td')
             if "There is currently no data" in cols_raw[0].text:
                 break
+            if cols_raw[0].text == "Rank":
+                continue
             if len(cols_raw) <= 2:
                 break
             self._parse_entry(cols_raw)

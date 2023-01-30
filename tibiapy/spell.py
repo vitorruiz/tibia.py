@@ -132,7 +132,7 @@ class SpellsSection(abc.Serializable):
             spells_section.sort_by = try_enum(SpellSorting, data["sort"])
             spells_section.premium = "yes" in data["premium"] if data["premium"] else None
             return spells_section
-        except (AttributeError, TypeError) as e:
+        except (AttributeError, TypeError, KeyError) as e:
             raise errors.InvalidContent("content does not belong to the Spells section", e)
 
     @classmethod
@@ -361,7 +361,7 @@ class Spell(SpellEntry):
                 if isinstance(next_sibling, bs4.Tag):
                     if next_sibling.name == "br":
                         description += "\n"
-                    elif next_sibling.name == "table":
+                    elif next_sibling.name in ["table", "div"]:
                         break
                     else:
                         description += next_sibling.text
