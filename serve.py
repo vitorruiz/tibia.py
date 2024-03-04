@@ -435,7 +435,7 @@ if __name__ == "__main__":
     print("Registered routes:")
     for route in routes:  # type: RouteDef
         print(f'- {route.method} {route.path}')
-    default_port = os.getenv('PORT')
+    default_port = int(os.getenv('PORT'))
     print('Default PORT: %s' % (default_port))
     if default_port:
         web.run_app(app, port=default_port)
