@@ -1,106 +1,93 @@
-import datetime
-import unittest
-
 from tests.tests_tibiapy import TestCommons
-from tibiapy import Category, Highscores, HighscoresEntry, InvalidContent, LoyaltyHighscoresEntry, \
-    Vocation, VocationFilter, BattlEyeHighscoresFilter
+from tibiapy import InvalidContentError
+from tibiapy.enums import HighscoresBattlEyeType, HighscoresCategory, HighscoresProfession, Vocation
+from tibiapy.models import Highscores, HighscoresEntry, LoyaltyHighscoresEntry
+from tibiapy.parsers import HighscoresParser
 
-FILE_HIGHSCORES_FULL = "highscores/tibiacom_full.txt"
-FILE_HIGHSCORES_EXPERIENCE = "highscores/tibiacom_experience.txt"
-FILE_HIGHSCORES_LOYALTY = "highscores/tibiacom_loyalty.txt"
-FILE_HIGHSCORES_BATTLEYE_PVP_FILTER = "highscores/tibiacom_battleye_pvp_filters.txt"
-FILE_HIGHSCORES_EMPTY = "highscores/tibiacom_empty.txt"
-FILE_HIGHSCORES_NO_RESULTS = "highscores/tibiacom_no_results.txt"
+FILE_HIGHSCORES_FULL = "highscores/highscores.txt"
+FILE_HIGHSCORES_GLOBAL = "highscores/highscoresGlobal.txt"
+FILE_HIGHSCORES_EXPERIENCE = "highscores/highscoresExperience.txt"
+FILE_HIGHSCORES_LOYALTY = "highscores/highscoresLoyalty.txt"
+FILE_HIGHSCORES_BATTLEYE_PVP_FILTER = "highscores/highscoresBattleEyePvpFilters.txt"
+FILE_HIGHSCORES_NOT_FOUND = "highscores/highscoresNotFound.txt"
+FILE_HIGHSCORES_NO_RESULTS = "highscores/highscoresNoResults.txt"
 
 
-class TestHighscores(unittest.TestCase, TestCommons):
+class TestHighscores(TestCommons):
     # region Tibia.com Tests
-    def test_highscores_from_content(self):
+    def test_highscores_parser_from_content(self):
         """Testing parsing Highscores"""
         content = self.load_resource(FILE_HIGHSCORES_FULL)
-        highscores = Highscores.from_content(content)
+        highscores = HighscoresParser.from_content(content)
 
-        self.assertEqual("Estela", highscores.world)
-        self.assertEqual(VocationFilter.KNIGHTS, highscores.vocation)
-        self.assertEqual(Category.MAGIC_LEVEL, highscores.category)
-        self.assertEqual(BattlEyeHighscoresFilter.ANY_WORLD, highscores.battleye_filter)
-        self.assertEqual(1983, highscores.results_count)
-        self.assertEqual(38, highscores.from_rank)
-        self.assertEqual(38, highscores.to_rank)
-        self.assertEqual(4, highscores.page)
-        self.assertEqual(40, highscores.total_pages)
+        self.assertEqual("Gladera", highscores.world)
+        self.assertEqual(HighscoresProfession.KNIGHTS, highscores.vocation)
+        self.assertEqual(HighscoresCategory.MAGIC_LEVEL, highscores.category)
+        self.assertEqual(HighscoresBattlEyeType.ANY_WORLD, highscores.battleye_filter)
+        self.assertEqual(1688, highscores.results_count)
+        self.assertEqual(16, highscores.from_rank)
+        self.assertEqual(168, highscores.to_rank)
+        self.assertEqual(4, highscores.current_page)
+        self.assertEqual(34, highscores.total_pages)
         self.assertIsNotNone(highscores.get_page_url(1))
         self.assertIsNotNone(highscores.url)
         self.assertIsNotNone(highscores.next_page_url)
         self.assertIsNotNone(highscores.previous_page_url)
-        self.assertEqual(datetime.timedelta(minutes=6), highscores.last_updated)
 
         for entry in highscores.entries:
-            self.assertIsInstance(entry, HighscoresEntry)
             self.assertIsInstance(entry.name, str)
             self.assertIsInstance(entry.vocation, Vocation)
             self.assertIsInstance(entry.rank, int)
             self.assertIsInstance(entry.value, int)
             self.assertIsInstance(entry.level, int)
-            self.assertEqual("Estela", entry.world)
+            self.assertEqual("Gladera", entry.world)
 
-    def test_highscores_from_content_highscores(self):
+    def test_highscores_parser_from_content_global_highscores(self):
+        content = self.load_resource(FILE_HIGHSCORES_GLOBAL)
+        highscores = HighscoresParser.from_content(content)
+
+        self.assertIsNotNone(highscores)
+        self.assertIsNone(highscores.world)
+
+    def test_highscores_parser_from_content_experience(self):
         """Testing parsing experience highscores"""
         content = self.load_resource(FILE_HIGHSCORES_EXPERIENCE)
-        highscores = Highscores.from_content(content)
+        highscores = HighscoresParser.from_content(content)
 
-        self.assertEqual(highscores.world, "Gladera")
-        self.assertEqual(highscores.vocation, VocationFilter.PALADINS)
-        self.assertEqual(highscores.category, Category.EXPERIENCE)
-        self.assertEqual(highscores.results_count, 1000)
-        self.assertEqual(highscores.total_pages, 20)
+        self.assertIsNotNone(highscores.world, )
+        self.assertEqual(highscores.category, HighscoresCategory.EXPERIENCE)
 
-        for entry in highscores.entries:
-            self.assertIsInstance(entry, HighscoresEntry)
-            self.assertIsInstance(entry.name, str)
-            self.assertIsInstance(entry.vocation, Vocation)
-            self.assertIsInstance(entry.rank, int)
-            self.assertIsInstance(entry.value, int)
-            self.assertIsInstance(entry.level, int)
-            self.assertEqual(entry.world, "Gladera")
 
-    def test_highscores_from_content_loyalty(self):
+    def test_highscores_parser_from_content_loyalty(self):
         """Testing parsing experience loyalty"""
         content = self.load_resource(FILE_HIGHSCORES_LOYALTY)
-        highscores = Highscores.from_content(content)
+        highscores = HighscoresParser.from_content(content)
 
         self.assertEqual("Calmera", highscores.world)
-        self.assertEqual(VocationFilter.PALADINS, highscores.vocation)
-        self.assertEqual(Category.LOYALTY_POINTS, highscores.category)
-        self.assertEqual(1007, highscores.results_count)
-        self.assertEqual(21, highscores.total_pages)
+        self.assertEqual(HighscoresProfession.PALADINS, highscores.vocation)
+        self.assertEqual(HighscoresCategory.LOYALTY_POINTS, highscores.category)
+        self.assertEqual(1000, highscores.results_count)
+        self.assertEqual(20, highscores.total_pages)
 
-        for entry in highscores.entries:
-            self.assertIsInstance(entry, LoyaltyHighscoresEntry)
-            self.assertIsInstance(entry.name, str)
-            self.assertIsInstance(entry.vocation, Vocation)
-            self.assertIsInstance(entry.rank, int)
-            self.assertIsInstance(entry.value, int)
-            self.assertIsInstance(entry.level, int)
-            self.assertIsInstance(entry.title, str)
+        self.assertForAll(highscores.entries, lambda e: self.assertIsInstance(e, LoyaltyHighscoresEntry))
 
-    def test_highscores_from_content_battleye_and_pvp_filters(self):
+
+    def test_highscores_parser_from_content_battleye_and_pvp_filters(self):
         """Testing parsing Highscores"""
         content = self.load_resource(FILE_HIGHSCORES_BATTLEYE_PVP_FILTER)
-        highscores = Highscores.from_content(content)
+        highscores = HighscoresParser.from_content(content)
 
         self.assertEqual(None, highscores.world)
-        self.assertEqual(VocationFilter.ALL, highscores.vocation)
-        self.assertEqual(Category.EXPERIENCE, highscores.category)
-        self.assertEqual(BattlEyeHighscoresFilter.INITIALLY_PROTECTED, highscores.battleye_filter)
+        self.assertEqual(HighscoresProfession.ALL, highscores.vocation)
+        self.assertEqual(HighscoresCategory.EXPERIENCE, highscores.category)
+        self.assertEqual(HighscoresBattlEyeType.INITIALLY_PROTECTED, highscores.battleye_filter)
         self.assertEqual(1000, highscores.results_count)
         self.assertEqual(1, highscores.from_rank)
         self.assertEqual(50, highscores.to_rank)
-        self.assertEqual(1, highscores.page)
+        self.assertEqual(1, highscores.current_page)
         self.assertEqual(20, highscores.total_pages)
-        self.assertEqual(3, len(highscores.pvp_types_filter))
+        self.assertEqual(4, len(highscores.pvp_types_filter))
         self.assertIsNotNone(highscores.url)
-        self.assertEqual(datetime.timedelta(minutes=27), highscores.last_updated)
 
         for entry in highscores.entries:
             self.assertIsInstance(entry, HighscoresEntry)
@@ -110,29 +97,27 @@ class TestHighscores(unittest.TestCase, TestCommons):
             self.assertIsInstance(entry.value, int)
             self.assertIsInstance(entry.level, int)
 
-    def test_highscores_from_content_empty(self):
+    def test_highscores_parser_from_content_not_found(self):
         """Testing parsing highscores when empty (world doesn't exist)"""
-        content = self.load_resource(FILE_HIGHSCORES_EMPTY)
-        highscores = Highscores.from_content(content)
+        content = self.load_resource(FILE_HIGHSCORES_NOT_FOUND)
+        highscores = HighscoresParser.from_content(content)
 
         self.assertIsNone(highscores)
 
-    def _test_highscores_from_content_no_results(self):
-        """Testing parsing highscores with no results (first day of a new world)"""
+    def test_highscores_parser_from_content_no_results(self):
+        """Testing parsing highscores with no results"""
         content = self.load_resource(FILE_HIGHSCORES_NO_RESULTS)
-        highscores = Highscores.from_content(content)
+        highscores = HighscoresParser.from_content(content)
 
         self.assertIsInstance(highscores, Highscores)
-        self.assertEqual(highscores.world, "Unica")
-        self.assertEqual(highscores.category, Category.EXPERIENCE)
-        self.assertEqual(highscores.vocation, VocationFilter.ALL)
-        self.assertEqual(highscores.total_pages, 0)
-        self.assertEqual(len(highscores.entries), 0)
+        self.assertEqual(1, highscores.total_pages)
+        self.assertIsEmpty(highscores.entries)
+        self.assertEqual(0, highscores.results_count)
 
-    def test_highscores_from_content_unrelated_section(self):
+    def test_highscores_parser_from_content_unrelated_section(self):
         """Testing parsing an unrelated section"""
         content = self.load_resource(self.FILE_UNRELATED_SECTION)
-        with self.assertRaises(InvalidContent):
-            Highscores.from_content(content)
+        with self.assertRaises(InvalidContentError):
+            HighscoresParser.from_content(content)
 
     # endregion

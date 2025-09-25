@@ -5,8 +5,8 @@
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
-import re
 import os
+import re
 import sys
 
 
@@ -29,7 +29,7 @@ autodoc_member_order = 'bysource'
 # -- Project information -----------------------------------------------------
 
 project = 'Tibia.py'
-copyright = '2021, Allan Galarza'
+copyright = '2024, Allan Galarza'
 author = 'Allan Galarza'
 
 # The short X.Y version
@@ -56,7 +56,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
-    'sphinx.ext.coverage'
+    'sphinx.ext.coverage',
+    'sphinx_autodoc_typehints',
+    'sphinxcontrib.autodoc_pydantic',
+
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -76,7 +79,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -103,7 +106,8 @@ html_theme_options = {
     'github_repo': 'tibia.py',
     'github_type': 'star',
     'fixed_sidebar': True,
-    'travis_button': True,
+    'codecov_button': True,
+    'travis_button': False,
     'donate_url': 'https://beerpay.io/Galarzaa90/tibia.py'
 }
 
@@ -194,6 +198,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
+    'python': ('https://docs.python.org/3', None),
     'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None),
+    'beautifulsoup4': ('https://www.crummy.com/software/BeautifulSoup/bs4/doc/', None),
+    'bs4': ('https://www.crummy.com/software/BeautifulSoup/bs4/doc/', None),
 }

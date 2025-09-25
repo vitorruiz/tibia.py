@@ -6,6 +6,177 @@ Changelog
     Due to this library relying on external content, older versions are not guaranteed to work.
     Try to always use the latest version.
 
+.. v6.3.0
+
+6.3.0 (2024-04-05)
+==================
+- Add Ocenia world location.
+
+.. v6.2.0
+
+6.2.0 (2024-03-31)
+==================
+- Add support for parsing the fansites section.
+
+.. v6.1.0
+
+6.1.0 (2024-01-15)
+==================
+- Add revealed gems to auction details.
+- Fixed `get_highscores` not handling null values in parameters.
+- Fixed house parsing not handing guildhalls properly.
+- Fixed houses missing "paid until" date.
+
+.. v6.0.4
+
+6.0.4 (2023-10-01)
+==================
+- Fixed pypi packaging issue.
+
+.. v6.0.3
+
+6.0.3 (2023-10-01)
+==================
+- Fixed bazaar filters not being set correctly for some values.
+
+.. v6.0.2
+
+6.0.2 (2023-08-27)
+==================
+- Fixed transfer recipient not being set in houses.
+- Fixed highest bid and time left not being set in houses in the houses section.
+
+.. v6.0.1
+
+6.0.1 (2023-08-25)
+==================
+- Fix spells not sold in any cities (revelation perks) having a single "cities" entry ``none`` instead of being empty.
+
+
+.. v6.0.0
+
+6.0.0 (2023-08-24)
+==================
+- 🚨 Python 3.7 and below no longer supported.
+- All models are now Pydantic models, for better data validation, serialization and deserialization.
+- Models no longer contain methods to parse content, these have been moved to dedicated parser classes.
+- 🚨 The location of models inside the module changed, so all imports need to be modified.
+- Model changes:
+    - ``Character``:
+        - ``account_status`` field replaced with ``is_premium``.
+        - ``traded`` field renamed to ``is_traded``.
+        - ``deleted`` property renamed to ``is_scheduled_for_deletion``.
+        - ``hidden`` property renamed to ``is_hidden``.
+    - ``Achievement``:
+        - ``secret`` field renamed to ``is_secret``
+    - ``CharacterHouse``:
+        - ``owner`` field removed.
+        - ``status`` field removed.
+        - ``type`` field removed.
+        - ``paid_until_date`` field renamed tp ``paid_until``.
+        - Removed ``owner``, ``status`` and ``type`` from ``CharacterHouse``.
+    - ``Killer``:
+        - Model name renamed to ``DeathParticipant``.
+        - ``player`` field renamed to ``is_player``.
+        - ``traded`` field renamed to ``is_traded``.
+    - ``Death``:
+        - ``by_player`` property renamed to ``is_by_player``
+        - ``name`` field removed.
+    - ``OtherCharacter``:
+        - ``online`` field renamed to ``is_online``.
+        - ``deleted`` field renamed to ``is_deleted``.
+        - ``traded`` field renamed to ``is_traded``.
+        - ``main`` field renamed to ``is_main``.
+    - ``WorldEntry`` / ``World``:
+        - ``online`` field renamed to ``is_online``
+        - ``battleye_date`` field renamed to ``battleye_since``
+        - ``premium_only`` field renamed to ``is_premium_only``
+        - ``experimental`` field renamed to ``is_experimental``
+        - ``battleye_protected`` property renamed to ``is_battleye_protected``
+    - ``OnlineCharacter``:
+        - ``world`` field removed.
+    - ``SpellsSection``:
+        - ``premium`` field renamed to ``is_premium``
+    - ``SpellEntry``/``Spell``:
+        - ``premium`` field renamed to ``is_premium``
+    - ``News``/``NewsEntry``:
+        - ``category_icon`` field removed. Can be accessed through ``category.big_icon_url`` and ``category.small_icon_url``.
+        - ``date`` field renamed to ``published_on``
+    - ``NewsArchive``:
+        - ``start_date`` field renamed to ``from_date``.
+        - ``end_date`` field renamed to ``to_date``.
+        - ``types`` field is now of type ``set``.
+        - ``categories`` field is now of type ``set``.
+    - ``NewsCategory`` (enum)
+        - Added ``big_icon_url`` and ``small_icon_url`` properties.
+    - ``Leaderboard``:
+        - ``current`` field renamed to ``is_current``.
+        - ``page`` field renamed to ``current_page``.
+        - ``last_update`` field removed.
+        - ``last_updated``field added, a datetime of when was the last update.
+    - ``LeaderboardEntry``:
+        - ``name`` field might be ``None`` if characte is deleted.
+    - ``Highscores``:
+        - ``.page`` field renamed to ``current_page``.
+        - ``last_updated`` field is now a ``datetime`` instead of a ``timedelta``.
+    - ``GuildMember``:
+        - ``joined`` field renamed to ``joined_on``.
+        - ``online`` field renamed to ``is_online``.
+    - ``GuildInvite``:
+        - ``date`` field renamed to ``invited_on``.
+    - ``GuildHouse``:
+        - ``paid_until_date`` field renamed tp ``paid_until``.
+        - ``owner`` field removed.
+        - ``world`` field removed.
+        - ``status`` field removed.
+        - ``type`` field removed.
+    - ``ForumBoard``:
+        - ``threads`` field renamed to ``entries``.
+        - ``page`` field renamed to ``current_page``.
+        - ``section_id`` field added.
+        - ``results_count`` field added.
+    - ``ForumThread``:
+        - ``posts`` field renamed to ``entries``.
+        - ``board_id`` field added.
+        - ``section_id`` field added.
+        - ``results_count`` field added.
+        - ``previous_topic_number`` may be ``None`` instead of ``0``.
+        - ``next_topic_number`` may be ``None`` instead of ``0``.
+    - ``LastPost``.
+        - ``date`` field renamed to ``posted_on``.
+        - ``deleted`` field renamed to ``is_author_deleted``.
+        - ``traded`` field renamed to ``is_author_traded``.
+    - ``CMPostArchive``:
+        - ``start_date`` field renamed to ``from_date``
+        - ``end_date`` field renamed to ``to_date``
+        - ``page`` field renamed to ``current_page``
+        - ``posts`` field renamed to ``entries``
+    - ``CMPost``:
+        - ``date`` field renamed to ``posted_on``
+    - ``Auction`` renamed to ``AuctionDetails`` and is no longer a subclass of ``AuctionEntry``.
+    - ``AuctionEntry`` renamed to ``Auction``.
+    - ``CharacterBazaar``:
+        - ``page`` field renamed to ``current_page``.
+    - ``BestiaryEntry``:
+        - ``completed`` property renamed to ``is_completed``.
+    - Renamed ``DisplayImage`` to ``ItemEntry``.
+    - Renamed ``DisplayMount`` to ``MountEntry``.
+    - Renamed ``DisplayOutfit`` to ``OutfitEntry``.
+    - Renamed ``DisplayFamiliar`` to ``FamiliarEntry``.
+    - Renamed ``page`` to ``current_page``, ``results`` to ``results_count``, and ``fully_fetched`` to ``is_fully_fetched`` in ``ItemSummary``, ``Mounts``, ``Familiars`` and ``Outfits``.
+    - Added ``thread_starter_deleted`` to ``ThreadEntry``.
+- Renamed ``Category`` to ``HighscoresCategory``.
+- Renamed ``BattlEyeTypeFilter`` to ``AuctionBattlEyeFilter``.
+- Renamed ``VocationFilter`` to ``HighscoresProfession``.
+- Renamed ``BattlEyeHighscoresFilter`` to ``HighscoresBattlEyeType``.
+- Renamed ``VocationAuctionFilter`` to ``AuctionVocationFilter``.
+- Renamed ``VocationSpellFilter`` to ``SpellVocationFilter``.
+- Renamed ``SkillFilter`` to ``AuctionSkillFilter``.
+- Added ``ForumSection`` model and its respective parser, to fetch a list of board entries.
+- Removed ``get_url`` class methods from all models, replaced by functions in the urls package.
+- Fixed ``Character`` account badges not being parsed properly.
+
+
 
 .. v5.6.0
 

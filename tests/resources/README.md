@@ -1,150 +1,205 @@
 # Resources
-This directory and its subdirectories contain extracts from Tibia.com and TibiaData.com responses,
+
+This directory and its subdirectories contain extracts from Tibia.com,
 trying to cover as many scenarios possible, to be used in unit tests.
 
-## Character resources
-- [tibiacom_deaths_complex.txt](character/tibiacom_deaths_complex.txt) - A character with many types of deaths, such as 
-deaths by summons, players, assisted deaths, etcetera.
-- [tibiacom_deletion.txt](character/tibiacom_deletion.txt) - A character scheduled for deletion.
-- [tibiacom_former_names.txt](character/tibiacom_former_names.txt) - A character with former names.
-- [tibiacom_full.txt](character/tibiacom_full.txt) - A full character response.
-- [tibiacom_not_found.txt](character/tibiacom_not_found.txt) - A character not found page.
-- [tibiacom_title_badges.txt](character/tibiacom_title_badges.txt) - A character with unlocked titles and badges.
-- [tibiacom_no_badges_selected.txt](character/tibiacom_no_badges_selected.txt) - A character with no selected badges.
-- [tibiacom_multiple_houses.txt](character/tibiacom_multiple_houses.txt) - A character with two houses.
-- [tibiacom_truncated_deaths.txt](character/tibiacom_truncated_deaths.txt) - A character with too many deaths to be displayed.
-- [tibiadata.json](character/tibiadata.json) - A character on TibiaData, also showing Pvp deaths with assists.
-- [tibiadata_deleted.json](character/tibiadata_deleted.json) - A character scheduled for deletion on TibiaData.
-- [tibiadata_not_found.json](character/tibiadata_not_found.json) - The response of a character not found on TibiaData.
-- [tibiadata_unhidden.json](character/tibiadata_unhidden.json) - A character with visible account information and 
-other characters on TibiaData.
-- [tibiadata_deaths_summon.json](character/tibiadata_deaths_summon.json) - A character with deaths by summons on 
-TibiaData.
+## Auction
 
-## Guild resources
-- [tibiacom_full.txt](guild/tibiacom_full.txt) - The content of a guild's page.
-- [tibiacom_war.txt](guild/tibiacom_war.txt) - The content of a guild's page for a guild with an active war.
-- [tibiacom_info_complete.txt](guild/tibiacom_info_complete.txt) - An extract of the information container of a guild
-with description, guildhall and homepage.
-- [tibiacom_info_disbanding.txt](guild/tibiacom_info_disbanding.txt) - An extract of the information container of a
-guild with a disband condition
-- [tibiacom_info_formation.txt](guild/tibiacom_info_formation.txt) - An extract of the information container of a guild
-still in formation.
-- [tibiacom_info_minimum.txt](guild/tibiacom_info_minimum.txt) - An extract of the information container of a guild
-with the bare minimum (no description, no guildhall, no homepage)
-- [tibiacom_list.txt](guild/tibiacom_list.txt) - The guild list of a world.
-- [tibiacom_list_not_found.txt](guild/tibiacom_list_not_found.txt) - The guild list of a world that doesn't exist.
-- [tibiacom_not_found.txt](guild/tibiacom_not_found.txt) - The page shown for a guild that doesn't exist.
-- [tibiadata.json](guild/tibiadata.json) - A guild on TibiaData, without disband information and no invites.
-- [tibiadata_disbanding.json](guild/tibiadata_disbanding.json) - A guild on TibiaData with a disband condition.
-- [tibiadata_invited.json](guild/tibiadata_invited.json) - A guild on TibiaData with pending invites.
-- [tibiadata_not_found.json](guild/tibiadata_not_found.json) - The response of a guild not found on TibiaData.
-- [tibiadata_list.json](guild/tibiadata_list.json) - The guild list of a world on TibiaData.
-- [tibiadata_list_not_found.json](guild/tibiadata_list_not_found.json) - The guild list of a world that doesn't exist on
- TibiaData
- 
-### War resources
+- [auctionFinished.txt](auction/auctionFinished.txt) - The content of a finished auction.
+- [auctionNotFound.txt](auction/auctionNotFound.txt) - The content of an auction that doesn't exist.
+- [auctionWithUpgradedItems.txt](auction/auctionWithUpgradedItems.txt) - An auction with upgraded items.
+- [auctionWithFragmentProgress.txt](auction/auctionWithFragmentProgress.txt) - An auction displaying fragment progress.
 
-- [tibiacom_empty.txt](guild/wars/tibiacom_empty.txt) - A guild with no active wars and no war history.
-- [tibiacom_unactive_history.txt](guild/wars/tibiacom_unactive_history.txt) - A guild with no active wars and a previous war (enemy disbanded).
-- [tibiacom_active_history.txt](guild/wars/tibiacom_active_history.txt) - A guild with an active war and two previous wars.
+## Boostable bosses
 
-## House resources
-- [tibiacom_full.txt](house/tibiacom_full.txt) - The content of a house's page
-- [tibiacom_status_no_bids.txt](house/tibiacom_status_no_bids.txt) - The status string of a auction house with no bids.
-- [tibiacom_status_rented.txt](house/tibiacom_status_rented.txt) - The status string of a rented house.
-- [tibiacom_status_transfer.txt](house/tibiacom_status_transfer.txt) - The status string of a rented house that is set
- for transfer.
-- [tibiacom_status_with_bids.txt](house/tibiacom_status_with_bids.txt) - The status string of a auctioned house with
- bids.
-- [tibiacom_not_found.txt](house/tibiacom_not_found.txt) - The content of a page for a house not found.
-- [tibiacom_list.txt](house/tibiacom_list.txt) - The house list of a world.
-- [tibiacom_list_empty.txt](house/tibiacom_list_empty.txt) - The house list of a world, showing no houses.
-- [tibiacom_list_not_found.txt](house/tibiacom_list_not_found.txt) - The house list of a world or town that doesn't 
-exist.
-- [tibiadata.json](house/tibiadata.json) - A house on TibiaData.
-- [tibiadata_not_found.json](house/tibiadata_not_found.json) - The TibiaData response for a house that doesn't exist.
-- [tibiadata_list.json](house/tibiadata_list.json) - A house list on TibiaData.
-- [tibiadata_list_not_found.json](house/tibiadata_list_not_found.json) - The TibiaData response for a house list that
-doesn't exist.
+- [bossList.txt](boostableBosses/bossList.txt) - The list of bosses.
 
-## Highscores resources
-- [tibiacom_full.txt](highscores/tibiacom_full.txt) - The content of a correct highscore's page.
-- [tibiacom_empty.txt](highscores/tibiacom_empty.txt) - The content of the highscores page of a nonexistent world.
-- [tibiacom_no_results.txt](highscores/tibiacom_no_results.txt) - The content of the highscores page of a new world (no results shown). _OUTDATED_
-- [tibiacom_experience.txt](highscores/tibiacom_experience.txt) - The content of an experience highscores page.
-- [tibiacom_loyalty.txt](highscores/tibiacom_loyalty.txt) - The content of a loyalty highscores page.
-- [tibiacom_battleye_pvp_filters.txt](highscores/tibiacom_battleye_pvp_filters.txt) - The content of the highscores page using BattlEye and PvP filters.
-- [tibiadata_full.json](highscores/tibiadata_full.json) - A highscores response from TibiaData.
-- [tibiadata_empty.json](highscores/tibiadata_empty.json) - A highscores response from TibiaData of a nonexistent world.
-- [tibiadata_experience.json](highscores/tibiadata_experience.json) - A response containing experience highscores from
-TibiaData.
-- [tibiadata_loyalty.json](highscores/tibiadata_loyalty.json) - A response containing loyalty highscores from TibiaData.
+## Character
 
-## Kill Statistics resources
-- [tibiacom_full.txt](kill_statistics/tibiacom_full.txt) - The content of a correct kill statistics' page.
-- [tibiacom_empty.txt](kill_statistics/tibiacom_empty.txt) - The content of the kill statistics's page of a 
-nonexistent world or a unselected world.
+- [character.txt](character/character.txt) - A full character response.
+- [characterNotFound.txt](character/characterNotFound.txt) - A character not found page.
+- [characterRecentlyTraded.txt](character/characterRecentlyTraded.txt) - A character that was traded and is also visible.
+- [characterScheduledForDeletion.txt](character/characterScheduledForDeletion.txt) - A character scheduled for deletion.
+- [characterWithComplexDeaths.txt](character/characterWithComplexDeaths.txt) - A character with many types of deaths, such as deaths by summons, players, assisted deaths, etcetera.
+- [characterWithFormerNames.txt](character/characterWithFormerNames.txt) - A character with former names.
+- [characterWithFormerWorld.txt](character/characterWithFormerWorld.txt) - A character with a former world.
+- [characterWithMultipleHouses.txt](character/characterWithMultipleHouses.txt) - A character with two houses.
+- [characterWithNoBadgesSelected.txt](character/characterWithNoBadgesSelected.txt) - A character with no selected badges.
+- [characterWithSpecialPosition.txt](character/characterWithSpecialPosition.txt) - A character with a special position.
+- [characterWithTitleAndBadges.txt](character/characterWithTitleAndBadges.txt) - A character with unlocked titles and badges.
+- [characterWithTruncatedDeaths.txt](character/characterWithTruncatedDeaths.txt) - A character with too many deaths to be displayed.
 
-## News resources
-- [tibiacom_list.txt](news/tibiacom_list.txt) - The content of the news search page with results.
-- [tibiacom_list_empty.txt](news/tibiacom_list_empty.txt) - The content of the news search page with no results.
-- [tibiacom_list_error.txt](news/tibiacom_list_error.txt) - The content of the news search page with an error.
-- [tibiacom_news.txt](news/tibiacom_news.txt) - The content of a news article.
-- [tibiacom_news_ticker.txt](news/tibiacom_news_ticker.txt) - The content of a news ticker.
+## Character Bazaar
 
-## Tournament resources
-- [tibiacom_archive.txt](tournaments/tibiacom_archive.txt) - The content of the tournament details for an archived tournament.
-- [tibiacom_leaderboard_current.txt](tournaments/tibiacom_leaderboard_current.txt) - The content of the leaderboards for an active tournament
-- [tibiacom_leaderboard_ended.txt](tournaments/tibiacom_leaderboard_ended.txt) - The content of the tournament leaderboards for a previous tournament.
-- [tibiacom_leaderboard_selector.txt](tournaments/tibiacom_leaderboard_selector.txt) - The content of the tournament leaderboards before selecting any options.
-- [tibiacom_leaderboard_selector.txt](tournaments/tibiacom_leaderboard_selector.txt) - The content of the tournament leaderboards before selecting any options.
-- [tibiacom_not_found.txt](tournaments/tibiacom_not_found.txt) - The content of the tournament section for a tournament that doesn't exist.
-- [tibiacom_sign_up.txt](tournaments/tibiacom_sign_up.txt) - The content for the tournament's page for a upcoming tournament.
-- [tibiacomnot_active.txt](tournaments/tibiacom_not_active.txt) - The content for the tournament's page when there's no running tournament.
- 
-## World resources
- - [tibiacom_online.txt](world/tibiacom_online.txt) - An online world on Tibia.com.
- - [tibiacom_offline.txt](world/tibiacom_offline.txt) - An offline world on Tibia.com.
- - [tibiacom_not_found.txt](world/tibiacom_not_found.txt) - The page shown for a world that doesn't exist.
- - [tibiacom_tournament.txt](world/tibiacom_tournament.txt) - The page shown for Tournament world.
- - [tibiacom_list_online.txt](world/tibiacom_list_online.txt) - The world list with all worlds online.
- - [tibiacom_list_offline.txt](world/tibiacom_list_offline.txt) - The world list with all worlds offline.
- - [tibiadata_online.json](world/tibiadata_online.json) - An online world on TibiaData.
- - [tibiadata_offline.json](world/tibiadata_offline.json) - An offline world on TibiaData.
- - [tibiadata_list_online.json](world/tibiadata_list_online.json) - The world list with worlds online on TibiaData.
- - [tibiadata_list_offline.json](world/tibiadata_list_offline.json) - The world list with worlds offline on TibiaData.
+- [bazaarCurrentAuctions.txt](characterBazaar/bazaarCurrentAuctions.txt) - The content of the current auctions page.
+- [bazaarCurrentAuctionsWithFilters.txt](characterBazaar/bazaarCurrentAuctionsWithFilters.txt) - The content of the current auctions page with all filters selected.
+- [bazaarHistory.txt](characterBazaar/bazaarHistory.txt) - The content of the auction history page.
+- [bazaarHistoryEmpty.txt](characterBazaar/bazaarHistoryEmpty.txt) - The content of the auction history page with no entries.
 
-## Forum resources
-- [tibiacom_announcement.txt](forums/tibiacom_announcement.txt) - An announcement post on Tibia.com.
-- [tibiacom_announcement_not_found.txt](forums/tibiacom_announcement_not_found.txt) - The page for an announcement post that doesn't exist.
-- [tibiacom_board.txt](forums/tibiacom_board.txt) - A forum board.
-- [tibiacom_board_empty.txt](forums/tibiacom_board_empty.txt) - An empty forum board.
-- [tibiacom_board_golden_frame.txt](forums/tibiacom_board_golden_frame.txt) - A forum board with golden frames on some posts.
-- [tibiacom_board_invalid_page.txt](forums/tibiacom_board_invalid_page.txt) - A forum board on a page out of range.
-- [tibiacom_cmpostarchive_initial.txt](forums/tibiacom_cmpostarchive_initial.txt) - The CM Post Archive's initial page, with no data selected.
-- [tibiacom_cmpostarchive_no_pages.txt](forums/tibiacom_cmpostarchive_no_pages.txt) - The CM Post Archive with a few results in a single page.
-- [tibiacom_cmpostarchive_no_results.txt](forums/tibiacom_cmpostarchive_no_results.txt) - The CM Post Archive with no results.
-- [tibiacom_cmpostarchive_pages.txt](forums/tibiacom_cmpostarchive_pages.txt) - The CM Post Archive with multiple pages.
-- [tibiacom_section.txt](forums/tibiacom_section.txt) - A forum section.
-- [tibiacom_section_empty.txt](forums/tibiacom_section_empty.txt) - An empty forum section.
-- [tibiacom_section_empty_board.txt](forums/tibiacom_section_empty_board.txt) - A forum section with an empty board. 
-- [tibiacom_thread.txt](forums/tibiacom_thread.txt) - A forum thread.
-- [tibiacom_thread_invalid_page.txt](forums/tibiacom_thread_invalid_page.txt) - A forum thread on a page out of range.
-- [tibiacom_thread_not_found.txt](forums/tibiacom_thread_not_found.txt) - The page for forum thread that doesn't exist.
+## CM Post Archive
 
-## Events resources
-- [tibiacom_calendar.txt](events/tibiacom_calendar.txt) - The content of the event's calendar.
+- [cmPostArchiveInitial.txt](cmPostArchive/cmPostArchiveInitial.txt) - The CM Post Archive's initial page, with no data selected.
+- [cmPostArchiveNoPages.txt](cmPostArchive/cmPostArchiveNoPages.txt) - The CM Post Archive with a few results in a single page.
+- [cmPostArchiveNoResults.txt](cmPostArchive/cmPostArchiveNoResults.txt) - The CM Post Archive with no results.
+- [cmPostArchivePages.txt](cmPostArchive/cmPostArchivePages.txt) - The CM Post Archive with multiple pages.
 
-## Bazaar resources
-- [tibiacom_auction_finished.txt](bazaar/tibiacom_auction_finished.txt) - The content of a finished auction.
-- [tibiacom_auction_not_found.txt](bazaar/tibiacom_auction_not_found.txt) - The content of an auction that doesn't exist.
-- [tibiacom_current.txt](bazaar/tibiacom_current.txt) - The content of the current auctions page.
-- [tibiacom_current_all_filters.txt](bazaar/tibiacom_current_all_filters.txt) - The content of the current auctions page with all filters selected.
-- [tibiacom_history.txt](bazaar/tibiacom_history.txt) - The content of the auction history page.
-- [tibiacom_history_empty.txt](bazaar/tibiacom_history_empty.txt) - The content of the auction history page with no entries.
+## Creature
 
- 
- ## Other resources
- - [tibiacom_about.txt](tibiacom_about.txt) - The 'About Tibia' section on Tibia.com, used to provide invalid content 
- for tests.
+- [creatureConvinceable.txt](creature/creatureConvinceable.txt) - A creature that can be convinced.
+- [creatureElementalResistances.txt](creature/creatureElementalResistances.txt) - A creature with elemental descriptions
+
+## Creatures Section
+
+- [creatureList.txt](creaturesSection/creatureList.txt) - The list of creatures.
+
+## Event Schedule
+
+- [eventSchedule.txt](eventSchedule/eventSchedule.txt) - The event schedule.
+
+## Forum Announcement
+
+- [forumAnnouncement.txt](forumAnnouncement/forumAnnouncement.txt) - An announcement post on Tibia.com.
+- [forumAnnouncementNotFound.txt](forumAnnouncement/forumAnnouncementNotFound.txt) - The page for an announcement post that doesn't exist.
+
+## Forum Board
+
+- [forumBoard.txt](forumBoard/forumBoard.txt) - A forum board.
+- [forumBoardWithAnnouncements.txt](forumBoard/forumBoardWithAnnouncements.txt) - A forum board with announcements.
+- [forumBoardEmpty.txt](forumBoard/forumBoardEmpty.txt) - An empty forum board.
+- [forumBoardInvalidPage.txt](forumBoard/forumBoardInvalidPage.txt) - A forum board on a page out of range.
+- [forumBoardNotFound.txt](forumBoard/forumBoardNotFound.txt) - The page shown for a board that doesn't exist.
+- [forumBoardWithGoldenFrame.txt](forumBoard/forumBoardWithGoldenFrame.txt) - A forum board with golden frames on some posts.
+- [forumBoardWithThreadByDeletedChar.txt](forumBoard/forumBoardWithThreadByDeletedChar.txt) - A forum board with a thread started by a deleted char.
+- [forumBoardWithThreadByTradedChar.txt](forumBoard/forumBoardWithThreadByTradedChar.txt) - A forum board with a thread started by a traded char.
+- [forumBoardWithThreadWithLastPostByDeletedChar.txt](forumBoard/forumBoardWithThreadWithLastPostByDeletedChar.txt) - A forum board with a thread with a last post by a deleted char.
+- [forumBoardWithThreadWithLastPostByTradedChar.txt](forumBoard/forumBoardWithThreadWithLastPostByTradedChar.txt) - A forum board with a thread with a last post by a traded char.
+
+## Forum Section
+
+- [forumSection.txt](forumSection/forumSection.txt) - A forum section.
+- [forumSectionEmpty.txt](forumSection/forumSectionEmpty.txt) - An empty forum section.
+- [forumSectionWithEmptyBoard.txt](forumSection/forumSectionWithEmptyBoard.txt) - A forum section with an empty board.
+
+## Forum Thread
+
+- [forumThread.txt](forumThread/forumThread.txt) - A forum thread.
+- [forumThreadInvalidPage.txt](forumThread/forumThreadInvalidPage.txt) - A forum thread on a page out of range.
+- [forumThreadNotFound.txt](forumThread/forumThreadNotFound.txt) - The page for forum thread that doesn't exist.
+- [forumThreadWithEditedPost.txt](forumThread/forumThreadWithEditedPost.txt) - A forum thread containing an edited post.
+- [forumThreadWithGoldenFrame.txt](forumThread/forumThreadWithGoldenFrame.txt) - A forum thread with a golden frame around it.
+- [forumThreadWithPostByDeletedChar.txt](forumThread/forumThreadWithPostByDeletedChar.txt) - A forum thread containing a post by a deleted character.
+- [forumThreadWithPostByTradedChar.txt](forumThread/forumThreadWithPostByTradedChar.txt) - A forum thread containing a post by a traded character.
+- [forumThreadWithPostWithGoldenFrame.txt](forumThread/forumThreadWithPostWithGoldenFrame.txt) - A forum thread containing a post with a golden frame around it.
+
+## Guild
+
+- [guild.txt](guild/guild.txt) - The content of a guild's page.
+- [guildAtWar.txt](guild/guildAtWar.txt) - The content of a guild's page for a guild with an active war.
+- [guildDisbanding.txt](guild/guildDisbanding.txt) - A guild that is set to be disbanded.
+- [guildFormation.txt](guild/guildFormation.txt) - A guild still in formation.
+- [guildMinimumInfo.txt](guild/guildMinimumInfo.txt) - A guild with the bare minimum (no description, no guildhall, no homepage)
+- [guildNotFound.txt](guild/guildNotFound.txt) - The page shown for a guild that doesn't exist.
+
+## Guilds Section
+
+- [guildsSection.txt](guildsSection/guildsSection.txt) - The guild list of a world.
+- [guildsSectionNotFound.txt](guildsSection/guildsSectionNotFound.txt) - The guild list of a world that doesn't exist.
+
+## Guild Wars
+
+- [guildWarActiveAndHistory.txt](guildWars/guildWarActiveAndHistory.txt) - A guild with an active war and two previous wars.
+- [guildWarEmpty.txt](guildWars/guildWarEmpty.txt) - A guild with no active wars and no war history.
+- [guildWarUnactiveAndHistory.txt](guildWars/guildWarUnactiveAndHistory.txt) - A guild with no active wars and a previous war (enemy disbanded).
+
+## Highscores
+
+- [highscores.txt](highscores/highscores.txt) - The content of a correct highscore's page.
+- [highscoresBattleEyePvpFilters.txt](highscores/highscoresBattleEyePvpFilters.txt) - The content of the highscores page using BattlEye and PvP filters.
+- [highscoresExperience.txt](highscores/highscoresExperience.txt) - The content of an experience highscores page.
+- [highscoresGlobal.txt](highscores/highscoresGlobal.txt) - The content of the highscores for all worlds.
+- [highscoresLoyalty.txt](highscores/highscoresLoyalty.txt) - The content of a loyalty highscores page.
+- [highscoresNoResults.txt](highscores/highscoresNoResults.txt) - The content of the highscores page with no results.
+- [highscoresNotFound.txt](highscores/highscoresNotFound.txt) - The content of the highscores page of a nonexistent world.
+
+## House
+
+- [houseAuctionedWithBids.txt](house/houseAuctionedWithBids.txt) - A house on auction with bids.
+- [houseAuctionedWithoutBids.txt](house/houseAuctionedWithoutBids.txt) - A house on auction without any bids.
+- [houseBeforeMerge.txt](house/houseBeforeMerge.txt) - A house from a world scheduled to be merged.
+- [houseNotFound.txt](house/houseNotFound.txt) - The content of a page for a house not found.
+- [houseRented.txt](house/houseRented.txt) - The content of a house's page
+- [houseRentedAcceptedTransfer.txt](house/houseRentedAcceptedTransfer.txt) - A rented house that will be transferred and is alreacy accepted.
+
+## Houses Section
+
+- [housesSection.txt](housesSection/housesSection.txt) - The house list of a world.
+- [housesSectionBeforeMerge.txt](housesSection/housesSectionBeforeMerge.txt) - The houses section of a world that is scheduled to be merged.## Houses Section
+- [housesSectionEmpty.txt](housesSection/housesSectionEmpty.txt) - The house list of a world, showing no houses.
+- [housesSectionNotFound.txt](housesSection/housesSectionNotFound.txt) - The house list of a world or town that doesn't exist.
+- [housesSectionWithAuctionHouses.txt](housesSection/housesSectionNotFound.txt) - The house list containing houses on auction.
+
+## Kill Statistics
+
+- [killStatisticsNotFound.txt](killStatistics/killStatisticsNotFound.txt) - The content of the kill statistics page of a nonexistent world or a unselected world.
+- [killStatisticsEmpty.txt](killStatistics/killStatisticsEmpty.txt) - The content for the kill statistics page with no results.
+- [killStatisticsWithResults.txt](killStatistics/killStatisticsWithResults.txt) - The content of a correct kill statistics' page.
+
+## Leaderboard
+
+- [leaderboardCurrentRotation.txt](leaderboard/leaderboardCurrentRotation.txt) - The leaderboard page for the current rotation of a world.
+- [leaderboardDeletedCharacter.txt](leaderboard/leaderboardDeletedCharacter.txt) - A leaderboad containing a deleted character.
+- [leaderboardEmpty.txt](leaderboard/leaderboardEmpty.txt) - The leaderboard page for a world with no entries.
+- [leaderboardNotFound.txt](leaderboard/leaderboardNotFound.txt) - The leaderboard page for a world that doesn't exist.
+
+## News
+
+- [newsFeaturedArticle.txt](news/newsFeaturedArticle.txt) - The content of a featured article.
+- [newsNotFound.txt](news/newsNotFound.txt) - The content of the page shown for an id that doesn't exist.
+- [newsPostWithDiscussionThread.txt](news/newsPostWithDiscussionThread.txt) - The content of a news post with a discussion thread.
+- [newsTicker.txt](news/newsTicker.txt) - The content of a news ticker.
+
+## News Archive
+
+- [newsArchiveEmpty.txt](newsArchive/newsArchiveEmpty.txt) - The content of the news search page with no results.
+- [newsArchiveError.txt](newsArchive/newsArchiveError.txt) - The content of the news search page with an error.
+- [newsArchiveInitial.txt](newsArchive/newsArchiveInitial.txt) - The content of the news search page with results and default filters.
+- [newsArchiveWithFilters.txt](newsArchive/newsArchiveWithFilters.txt) - The content of the news search page with results using filters.
+
+## Spell
+
+- [spell.txt](spells/spell.txt) - A regular spell.
+- [spellMultilineDescription.txt](spells/spellMultilineDescription.txt) - A spell with a description of multiple lines.
+- [spellRevelationPerk.txt](spells/spellRevelationPerk.txt) - A spell obtained from a revelation perk.
+- [spellVariableMana.txt](spells/spellVariableMana.txt) - A spell with variable mana usage.
+- [spellWithRune.txt](spells/spellWithRune.txt) - A spell that produces a rune.
+- [spellWithSecondaryGroup.txt](spells/spellWithSecondaryGroup.txt) - A spell that has a secondary cooldown group.
+
+## Spells Section
+
+- [spellsSectionDefault.txt](spellsSection/spellsSectionDefault.txt) - The spells section with all results (no filters used).
+- [spellsSectionEmpty.txt](spellsSection/spellsSectionEmpty.txt) - The spells section with empty results (due to filter combination).
+
+## World
+
+- [worldExperimental.txt](world/worldExperimental.txt) - A experimental world.
+- [worldGreenBattlEye.txt](world/worldGreenBattlEye.txt) - A world that was initially protected by BattlEye.
+- [worldNeverOnline.txt](world/worldNeverOnline.txt) - A world that has never been online.
+- [worldNoTitles.txt](world/worldNoTitles.txt) - A world without titles.
+- [worldNotFound.txt](world/worldNotFound.txt) - The page shown for a world that doesn't exist.
+- [worldOnline.txt](world/worldOnline.txt) - An online world on Tibia.com.
+- [worldUnprotected.txt](world/worldUnprotected.txt) - A world with no BattlEye protection.
+- [worldYellowBattlEye.txt](world/worldYellowBattlEye.txt) - A world that was not initially protected by BattlEye.
+
+## World Overview
+
+- [worldOverviewOnline.txt](worldOverview/worldOverviewOnline.txt) - The world list with all worlds online.
+- [worldOverviewOffline.txt](worldOverview/worldOverviewOffline.txt) - The world list with all worlds offline.
+
+## Fansites
+
+- [fansites.txt](fansites/fansites.txt) - The fansites section.
+
+## Other
+
+- [tibiacom_about.txt](aboutSection.txt) - The 'About Tibia' section on Tibia.com, used to provide invalid content for tests.
+

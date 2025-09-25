@@ -1,192 +1,170 @@
 import datetime
-import unittest
 
 from tests.tests_tibiapy import TestCommons
-from tibiapy import AccountBadge, Character, CharacterHouse, Death, InvalidContent, Killer
-from tibiapy.enums import AccountStatus, Sex, Vocation
+from tibiapy import InvalidContentError
+from tibiapy.enums import Sex, Vocation
+from tibiapy.models import Character
+from tibiapy.parsers import CharacterParser
+from tibiapy.urls import get_character_url
 from tibiapy.utils import parse_tibia_datetime
 
-FILE_CHARACTER_RESOURCE = "character/tibiacom_full.txt"
-FILE_CHARACTER_NOT_FOUND = "character/tibiacom_not_found.txt"
-FILE_CHARACTER_FORMER_NAMES = "character/tibiacom_former_names.txt"
-FILE_CHARACTER_SPECIAL_POSITION = "character/tibiacom_special_position.txt"
-FILE_CHARACTER_DELETION = "character/tibiacom_deletion.txt"
-FILE_CHARACTER_DEATHS_COMPLEX = "character/tibiacom_deaths_complex.txt"
-FILE_CHARACTER_TITLE_BADGES = "character/tibiacom_title_badges.txt"
-FILE_CHARACTER_NO_BADGES_SELECTED = "character/tibiacom_no_badges_selected.txt"
-FILE_CHARACTER_MULTIPLE_HOUSES = "character/tibiacom_multiple_houses.txt"
-FILE_CHARACTER_TRUNCATED_DEATHS = "character/tibiacom_truncated_deaths.txt"
+FILE_CHARACTER_RESOURCE = "character/character.txt"
+FILE_CHARACTER_NOT_FOUND = "character/characterNotFound.txt"
+FILE_CHARACTER_FORMER_NAMES = "character/characterWithFormerNames.txt"
+FILE_CHARACTER_FORMER_WORLD = "character/characterWithFormerWorld.txt"
+FILE_CHARACTER_TRADED = "character/characterRecentlyTraded.txt"
+FILE_CHARACTER_TRADED_KILLER = "character/character_with_traded_killer.txt"
+FILE_CHARACTER_SPECIAL_POSITION = "character/characterWithSpecialPosition.txt"
+FILE_CHARACTER_DELETION = "character/characterScheduledForDeletion.txt"
+FILE_CHARACTER_DEATHS_COMPLEX = "character/characterWithComplexDeaths.txt"
+FILE_CHARACTER_TITLE_BADGES = "character/characterWithTitleAndBadges.txt"
+FILE_CHARACTER_NO_BADGES_SELECTED = "character/characterWithNoBadgesSelected.txt"
+FILE_CHARACTER_MULTIPLE_HOUSES = "character/characterWithMultipleHouses.txt"
+FILE_CHARACTER_TRUNCATED_DEATHS = "character/characterWithTruncatedDeaths.txt"
 
 
-class TestCharacter(TestCommons, unittest.TestCase):
-    def _compare_character(self, mock_character, character):
-        self.assertEqual(mock_character.name, character.name)
-        self.assertEqual(mock_character.world, character.world)
-        self.assertEqual(mock_character.vocation, character.vocation)
-        self.assertEqual(mock_character.level, character.level)
-        self.assertEqual(mock_character.sex, character.sex)
+class TestCharacter(TestCommons):
 
     # region Tibia.com Character Tests
-    def test_character_from_content(self):
+    def test_character_parser_from_content(self):
         """Testing parsing a character's HTML content"""
-        character = Character.from_content(self.load_resource(FILE_CHARACTER_RESOURCE))
-        self._compare_character(Character("Tschas", "Gladera", Vocation.ELDER_DRUID, 522, Sex.FEMALE), character)
+        character = CharacterParser.from_content(self.load_resource(FILE_CHARACTER_RESOURCE))
+        self.assertEqual("Tschas", character.name)
+        self.assertEqual("Gladera", character.world)
+        self.assertEqual(Vocation.ELDER_DRUID, character.vocation)
+        self.assertEqual(833, character.level)
+        self.assertEqual(Sex.FEMALE, character.sex)
         self.assertIsNotNone(character.guild_membership)
         self.assertEqual("Bald Dwarfs", character.guild_membership.name)
-        self.assertEqual("Emperor", character.guild_membership.rank)
+        self.assertEqual("Exalted", character.guild_membership.rank)
         self.assertIsNotNone(character.guild_url)
         self.assertIsNone(character.married_to_url)
         self.assertEqual(character.guild_name, character.guild_membership.name)
         self.assertEqual(character.guild_rank, character.guild_membership.rank)
-        self.assertEqual(AccountStatus.PREMIUM_ACCOUNT, character.account_status)
-        self.assertEqual(304, character.achievement_points)
+        self.assertTrue(character.is_premium)
+        self.assertEqual(405, character.achievement_points)
         self.assertIsNone(character.deletion_date)
         self.assertIsNotNone(character.deaths)
-        self.assertEqual(2, character.deaths.__len__())
-        self.assertEqual(parse_tibia_datetime("Aug 02 2021, 17:32:07 CEST"), character.last_login)
-        self.assertEqual(character.url, Character.get_url(character.name))
+        self.assertEqual(0, character.deaths.__len__())
+        self.assertEqual(parse_tibia_datetime("Apr 16 2023, 00:43:29 CEST"), character.last_login)
+        self.assertEqual(character.url, get_character_url(character.name))
         self.assertEqual(5, len(character.other_characters))
-        self.assertFalse(character.hidden)
+        self.assertFalse(character.is_hidden)
+        self.assertIn(character.name, character.url)
 
-        # Badges
-        self.assertEqual(3, len(character.account_badges))
-        badge = character.account_badges[0]
-        self.assertEqual("Ancient Hero", badge.name)
-        self.assertEqual("The account is older than 15 years.", badge.description)
-
-    def test_character_from_content_not_found(self):
+    def test_character_parser_from_content_not_found(self):
         """Testing parsing a character not found page"""
         content = self.load_resource(FILE_CHARACTER_NOT_FOUND)
-        char = Character.from_content(content)
+        char = CharacterParser.from_content(content)
         self.assertIsNone(char)
 
-    def test_character_from_content_with_former_names(self):
+    def test_character_parser_from_content_traded(self):
+        """Testing parsing a character that was traded recently"""
+        content = self.load_resource(FILE_CHARACTER_TRADED)
+
+        char = CharacterParser.from_content(content)
+
+        self.assertIsInstance(char, Character)
+        self.assertTrue(char.is_traded)
+        self.assertTrue(any(c.is_traded for c in char.other_characters), "at least one character should be traded")
+
+    def test_character_parser_from_content_with_former_names(self):
         """Testing parsing a character that has former names"""
         content = self.load_resource(FILE_CHARACTER_FORMER_NAMES)
-        char = Character.from_content(content)
-        self.assertIsInstance(char.former_names, list)
-        self.assertTrue(char.former_names)
-        self.assertEqual(len(char.former_names), 2)
 
-        self.assertIsInstance(char.houses[0], CharacterHouse)
-        self.assertEqual(char.houses[0].owner, char.name)
-        self.assertEqual(char.houses[0].town, "Darashia")
-        self.assertEqual(char.houses[0].world, char.world)
-        self.assertIsInstance(char.houses[0].paid_until_date, datetime.date)
+        char = CharacterParser.from_content(content)
 
-    def test_character_from_content_with_position(self):
+        self.assertIsNotEmpty(char.former_names)
+
+    def test_character_parser_from_content_with_former_world(self):
+        """Testing parsing a character that has a former world."""
+        content = self.load_resource(FILE_CHARACTER_FORMER_NAMES)
+
+        char = CharacterParser.from_content(content)
+
+        self.assertIsNotNone(char.former_world)
+
+    def test_character_parser_from_content_with_position(self):
         """Testing parsing a character with a position"""
         content = self.load_resource(FILE_CHARACTER_SPECIAL_POSITION)
 
         position = "CipSoft Member"
 
-        char = Character.from_content(content)
-        self.assertEqual("Steve", char.name)
+        char = CharacterParser.from_content(content)
         self.assertEqual(position, char.position)
         self.assertEqual(position, char.account_information.position)
-        steve_other = char.other_characters[2]
-        self.assertEqual("Steve", steve_other.name)
-        self.assertEqual("CipSoft Member", steve_other.position)
+        self.assertTrue(any(c.position == position for c in char.other_characters),
+                        "at least one character should have a position")
 
-    def test_character_from_content_deleted_character(self):
+    def test_character_parser_from_content_deleted_character(self):
         """Testing parsing a character scheduled for deletion"""
         content = self.load_resource(FILE_CHARACTER_DELETION)
-        char = Character.from_content(content)
-        self.assertEqual("Expendable Dummy", char.name)
+        char = CharacterParser.from_content(content)
+        self.assertEqual("Gutek Handless", char.name)
         self.assertIsNotNone(char.deletion_date)
         self.assertIsInstance(char.deletion_date, datetime.datetime)
-        self.assertEqual(parse_tibia_datetime("Oct 08 2018 22:17:00 CEST"), char.deletion_date)
+        self.assertTrue(char.is_scheduled_for_deletion)
 
-    def test_character_from_content_complex_deaths(self):
+    def test_character_parser_from_content_complex_deaths(self):
         """Testing parsing a character with complex deaths (summons, assists, etc)"""
         content = self.load_resource(FILE_CHARACTER_DEATHS_COMPLEX)
-        char = Character.from_content(content)
+
+        char = CharacterParser.from_content(content)
+
+        deaths = char.deaths
         self.assertEqual(5, len(char.deaths))
-        death1, death2, death3, death4, death5 = char.deaths
-        self.assertIsInstance(death1, Death)
-        self.assertEqual(23, len(death1.killers))
-        self.assertEqual(1, len(death1.assists))
+        self.assertTrue(deaths[0].is_by_player)
+        self.assertEqual(23, len(deaths[0].killers))
+        self.assertTrue(deaths[0].killer.is_player)
+        self.assertEqual(1, len(deaths[0].assists))
 
-        self.assertIsInstance(death2, Death)
-        self.assertEqual(1, len(death2.killers))
-        self.assertEqual(0, len(death2.assists))
+        self.assertEqual(1, len(deaths[1].killers))
+        self.assertEqual(0, len(deaths[1].assists))
 
-        self.assertIsInstance(death3, Death)
-        self.assertEqual(11, len(death3.killers))
-        self.assertEqual(0, len(death3.assists))
-        self.assertEqual("a paladin familiar", death3.killers[-1].summon)
-        self.assertEqual("Alloy Hat", death3.killers[-1].name)
-        self.assertTrue(death3.killers[-1].traded)
+        self.assertEqual(11, len(deaths[2].killers))
+        self.assertEqual(0, len(deaths[2].assists))
+        self.assertEqual("a paladin familiar", deaths[2].killers[-1].summon)
+        self.assertEqual("Alloy Hat", deaths[2].killers[-1].name)
+        self.assertTrue(deaths[2].killers[-1].is_traded)
 
-        self.assertIsInstance(death4, Death)
-        self.assertEqual(12, len(death4.killers))
-        self.assertEqual(0, len(death4.assists))
-        self.assertEqual("Cliff Lee Burton", death4.killers[-1].name)
-        self.assertTrue(death4.killers[-1].traded)
+        self.assertEqual(12, len(deaths[3].killers))
+        self.assertEqual(0, len(deaths[3].assists))
+        self.assertEqual("Cliff Lee Burton", deaths[3].killers[-1].name)
+        self.assertTrue(deaths[3].killers[-1].is_traded)
 
-    def test_character_from_content_badges_and_title(self):
+    def test_character_parser_from_content_badges_and_title(self):
         """Testing parsing a character with account badges and a title"""
         content = self.load_resource(FILE_CHARACTER_TITLE_BADGES)
-        char = Character.from_content(content)
-        self.assertEqual("Galarzaa Fidera", char.name)
-        self.assertEqual(406, char.achievement_points)
+        char = CharacterParser.from_content(content)
         self.assertEqual("Gold Hoarder", char.title)
-        self.assertEqual(8, char.unlocked_titles)
-        self.assertEqual(6, len(char.account_badges))
-        for badge in char.account_badges:
-            self.assertIsInstance(badge, AccountBadge)
-            self.assertIsInstance(badge.name, str)
-            self.assertIsInstance(badge.icon_url, str)
-            self.assertIsInstance(badge.description, str)
+        self.assertEqual(13, char.unlocked_titles)
+        self.assertSizeEquals(char.account_badges, 8)
 
-    def test_character_from_content_no_selected_badges(self):
+    def test_character_parser_from_content_no_selected_badges(self):
         """Testing parsing a character with visible badges but none selected."""
         content = self.load_resource(FILE_CHARACTER_NO_BADGES_SELECTED)
-        char = Character.from_content(content)
-        self.assertEqual("Cozzackirycerz", char.name)
-        self.assertEqual(25, char.achievement_points)
-        self.assertIsNone(char.title)
-        self.assertEqual(3, char.unlocked_titles)
-        self.assertEqual(0, len(char.account_badges))
-        self.assertEqual(0, len(char.former_names))
+        char = CharacterParser.from_content(content)
+        self.assertIsEmpty(char.account_badges)
 
-    def test_character_from_content_multiple_houses(self):
+    def test_character_parser_from_content_multiple_houses(self):
         """Testing parsing a character with multiple houses."""
         content = self.load_resource(FILE_CHARACTER_MULTIPLE_HOUSES)
-        char = Character.from_content(content)
-        self.assertEqual("Sayuri Nowan", char.name)
-        self.assertEqual(2, len(char.houses))
-        first_house = char.houses[0]
-        second_house = char.houses[1]
-        self.assertEqual("Cormaya 10", first_house.name)
-        self.assertEqual("Old Heritage Estate", second_house.name)
-        self.assertEqual("Edron", first_house.town)
-        self.assertEqual("Rathleton", second_house.town)
 
-    def test_character_from_content_truncated_deaths(self):
+        char = CharacterParser.from_content(content)
+
+        self.assertSizeAtLeast(char.houses, 2)
+
+    def test_character_parser_from_content_truncated_deaths(self):
         """Testing parsing a character with truncated daths"""
         content = self.load_resource(FILE_CHARACTER_TRUNCATED_DEATHS)
-        char = Character.from_content(content)
-        self.assertEqual("Godlike Terror", char.name)
-        self.assertEqual(51, len(char.deaths))
+        char = CharacterParser.from_content(content)
+        self.assertIsNotEmpty(char.deaths)
         self.assertTrue(char.deaths_truncated)
 
-    def test_character_from_content_unrelated(self):
+    def test_character_parser_from_content_unrelated(self):
         """Testing parsing an unrelated tibia.com section"""
         content = self.load_resource(self.FILE_UNRELATED_SECTION)
-        with self.assertRaises(InvalidContent):
-            Character.from_content(content)
+        with self.assertRaises(InvalidContentError):
+            CharacterParser.from_content(content)
 
     # endregion
-
-    def test_death_types(self):
-        """Testing different death types"""
-        assisted_suicide = Death("Galarzaa", 280, killers=[Killer("Galarzaa", True), Killer("a pixy")],
-                                 time=datetime.datetime.now())
-        self.assertEqual(assisted_suicide.killer, assisted_suicide.killers[0])
-        self.assertFalse(assisted_suicide.by_player)
-
-        spawn_invasion = Death("Galarza", 270, killers=[Killer("a demon"), Killer("Nezune", True)])
-        self.assertEqual(spawn_invasion.killer, spawn_invasion.killers[0])
-        self.assertIsNone(spawn_invasion.killer.url)
-        self.assertTrue(spawn_invasion.by_player)

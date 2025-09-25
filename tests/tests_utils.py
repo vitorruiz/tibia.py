@@ -1,10 +1,9 @@
 import datetime
-import unittest
 
-import tibiapy
 from tests.tests_tibiapy import TestCommons
 from tibiapy import enums, utils
-from tibiapy.utils import get_tibia_url, parse_integer, parse_tibia_money
+from tibiapy.utils import parse_integer, parse_tibia_money
+from tibiapy.urls import get_tibia_url
 
 TIBIA_DATETIME_CEST = "Jul 10 2018, 07:13:32 CEST"
 TIBIA_DATETIME_CET = "Jan 10 2018, 07:13:32 CET"
@@ -16,29 +15,7 @@ TIBIA_FULL_DATE = "July 23, 2015"
 TIBIA_DATE_INVALID = "8 Nov 2018"
 
 
-class TestUtils(TestCommons, unittest.TestCase):
-    def test_serializable_get_item(self):
-        """Testing the muliple ways to use __get__ for Serializable"""
-        # Class inherits from Serializable
-        world = tibiapy.World("Calmera")
-
-        # Serializable allows accessing attributes like a dictionary
-        self.assertEqual(world.name, world["name"])
-        # And setting values too
-        world["location"] = tibiapy.enums.WorldLocation.NORTH_AMERICA
-        self.assertEqual(world.location, tibiapy.enums.WorldLocation.NORTH_AMERICA)
-
-        # Accessing via __get__ returns KeyError instead of AttributeError to follow dictionary behaviour
-        with self.assertRaises(KeyError):
-            _level = world["level"]  # NOSONAR
-
-        # Accessing an undefined attribute that is defined in __slots__ returns `None` instead of raising an exception.
-        del world.location
-        self.assertIsNone(world["location"])
-
-        # New attributes can't be created by assignation
-        with self.assertRaises(KeyError):
-            world["custom"] = "custom value"
+class TestUtils(TestCommons):
 
     def test_parse_tibia_datetime(self):
         time = utils.parse_tibia_datetime(TIBIA_DATETIME_CEST)
@@ -118,14 +95,13 @@ class TestUtils(TestCommons, unittest.TestCase):
         self.assertEqual(utils.try_enum(enums.Sex, "male"), enums.Sex.MALE)
         self.assertEqual(utils.try_enum(enums.TransferType, "", enums.TransferType.REGULAR), enums.TransferType.REGULAR)
         self.assertEqual(utils.try_enum(enums.WorldLocation, enums.WorldLocation.EUROPE), enums.WorldLocation.EUROPE)
-        self.assertEqual(utils.try_enum(enums.VocationFilter, 4), enums.VocationFilter.SORCERERS)
-        self.assertEqual(utils.try_enum(enums.Category, "FISHING"), enums.Category.FISHING)
+        self.assertEqual(utils.try_enum(enums.HighscoresProfession, 4), enums.HighscoresProfession.SORCERERS)
+        self.assertEqual(utils.try_enum(enums.HighscoresCategory, "FISHING"), enums.HighscoresCategory.FISHING)
 
     def test_enum_str(self):
-        self.assertEqual(str(enums.Sex.MALE), enums.Sex.MALE.value)
-        self.assertEqual(enums.VocationFilter.from_name("royal paladin"), enums.VocationFilter.PALADINS)
-        self.assertEqual(enums.VocationFilter.from_name("unknown"), enums.VocationFilter.ALL)
-        self.assertIsNone(enums.VocationFilter.from_name("unknown", False))
+        self.assertEqual(enums.HighscoresProfession.from_name("royal paladin"), enums.HighscoresProfession.PALADINS)
+        self.assertEqual(enums.HighscoresProfession.from_name("unknown"), enums.HighscoresProfession.ALL)
+        self.assertIsNone(enums.HighscoresProfession.from_name("unknown", False))
 
     def test_parse_tibia_money(self):
         self.assertEqual(1000, parse_tibia_money("1k"))

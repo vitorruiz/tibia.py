@@ -25,9 +25,8 @@ cache:
 build:
   stage: build
   script:
-    - pip install -U -e .
-    - pip install wheel
-    - python setup.py sdist bdist_wheel
+    - python -m pip install build
+    - python -m build
   artifacts:
     name: tibia.py-dist
     paths:
@@ -48,8 +47,8 @@ docs:
 coverage:
   stage: test
   script:
-    - pip install -U -e .[test]
-    - coverage run setup.py test
+    - pip install -U -e .[testing]
+    - coverage run
     - coverage report
     - coverage html
     - coverage xml
