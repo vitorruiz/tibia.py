@@ -24,4 +24,4 @@ COPY server.py main.py
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=5 \
   CMD curl --fail http://localhost:8000/healthcheck || exit 1
-ENTRYPOINT ["fastapi", "run", "--port", "8000"]
+CMD ["python", "server.py"]

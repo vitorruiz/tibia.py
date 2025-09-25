@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import datetime
 import logging
 from contextlib import asynccontextmanager
@@ -479,4 +480,5 @@ async def get_auction(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app=app)
+    port = int(os.getenv("PORT", 8000))  # usa PORT do Heroku, senão 8000 local
+    uvicorn.run(app=app, host="0.0.0.0", port=port)
