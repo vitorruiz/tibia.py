@@ -1,0 +1,56 @@
+name: 🗃️ Bazaar snapshot
+
+# The server save happens at 10:00 CET/CEST (08:00 or 09:00 UTC). The job runs hourly afterwards and exits early when
+# the snapshot is already up to date or the bazaar hasn't processed the server save yet (delays, maintenance).
+on:
+  schedule:
+    - cron: "15 9-17 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Skip the server save readiness checks"
+        type: boolean
+        default: false
+
+concurrency:
+  group: bazaar-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: 🗃️ Build and publish snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SNAPSHOT_URL: https://github.com/${{ github.repository }}/releases/download/bazaar-latest/bazaar.json.gz
+    steps:
+      - name: Checkout 🚚
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 1
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: "3.12"
+      - name: Install dependencies ⚙️
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Ensure release exists 📦
+        run: |
+          gh release view bazaar-latest || gh release create bazaar-latest \
+            --title "Bazaar snapshot" --notes "Daily Char Bazaar snapshot. Rebuilt automatically." --prerelease
+      - name: Build snapshot 🗃️
+        run: |
+          ARGS="--previous $SNAPSHOT_URL --out bazaar.json.gz --max-minutes 300"
+          if [ "${{ inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
+          # The last scheduled run of the day fails when the snapshot is still incomplete, so GitHub emails an alert.
+          if [ "$(date -u +%H)" -ge 17 ]; then ARGS="$ARGS --require-complete"; fi
+          python scripts/bazaar_sync.py $ARGS
+      - name: Publish snapshot 🚀
+        if: always() && hashFiles('bazaar.json.gz') != ''
+        run: gh release upload bazaar-latest bazaar.json.gz --clobber

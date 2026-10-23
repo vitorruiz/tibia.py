@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import logging
-from contextlib import asynccontextmanager
+import os
+from contextlib import asynccontextmanager, suppress
+from pathlib import Path as FilePath
 from typing import Annotated, Optional, TypeVar
 
+import aiohttp
 import uvicorn
 from fastapi import Depends, FastAPI, Path, Query, Response
 from starlette import status
 
 import tibiapy
+from tibiapy.exevo import auction_to_exevo, build_response, filter_auctions, load_snapshot
 from tibiapy.enums import (
     AuctionBattlEyeFilter,
     AuctionOrderBy,
@@ -72,10 +77,54 @@ log.addHandler(console_handler)
 log.setLevel(logging.DEBUG)
 
 
+BAZAAR_SNAPSHOT_URL = os.environ.get("BAZAAR_SNAPSHOT_URL", "")
+BAZAAR_REFRESH_SECONDS = 3600
+
+
+async def refresh_bazaar_snapshot(app: FastAPI) -> None:
+    """Load the Char Bazaar snapshot from ``BAZAAR_SNAPSHOT_URL`` (URL or file path) if it changed."""
+    if not BAZAAR_SNAPSHOT_URL:
+        return
+    try:
+        if BAZAAR_SNAPSHOT_URL.startswith(("http://", "https://")):
+            headers = {"If-None-Match": app.state.bazaar_etag} if app.state.bazaar_etag else {}
+            async with aiohttp.ClientSession() as session, session.get(BAZAAR_SNAPSHOT_URL, headers=headers) as resp:
+                if resp.status == status.HTTP_304_NOT_MODIFIED:
+                    return
+                resp.raise_for_status()
+                data = await resp.read()
+                app.state.bazaar_etag = resp.headers.get("ETag")
+        else:
+            data = FilePath(BAZAAR_SNAPSHOT_URL.removeprefix("file://")).read_bytes()
+        snapshot = load_snapshot(data)
+        # Don't replace a complete snapshot with a partial one of the same server save.
+        current = app.state.bazaar
+        if (current.get("complete") and not snapshot.get("complete")
+                and current.get("lastServerSave") == snapshot.get("lastServerSave")):
+            return
+        app.state.bazaar = snapshot
+        log.info("Loaded bazaar snapshot with %d auctions", len(snapshot.get("auctions", [])))
+    except Exception:
+        log.exception("Failed to refresh the bazaar snapshot")
+
+
+async def bazaar_refresh_loop(app: FastAPI) -> None:
+    while True:
+        await asyncio.sleep(BAZAAR_REFRESH_SECONDS)
+        await refresh_bazaar_snapshot(app)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.client = tibiapy.Client()
+    app.state.bazaar = {"auctions": [], "worlds": {}}
+    app.state.bazaar_etag = None
+    await refresh_bazaar_snapshot(app)
+    refresh_task = asyncio.create_task(bazaar_refresh_loop(app))
     yield
+    refresh_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await refresh_task
     await app.state.client.session.close()
 
 
@@ -485,6 +534,56 @@ async def get_auction(
     return await app.state.client.fetch_auction(auction_id, skip_details=skip_details, fetch_items=fetch_items,
                                                 fetch_mounts=fetch_mounts, fetch_outfits=fetch_outfits,
                                                 fetch_familiars=fetch_familiars)
+
+
+# endregion
+
+# region Exevo Pan compatible API
+
+
+@app.get("/exevo/auctions", tags=["Exevo"], summary="Exevo Pan compatible auction search")
+async def get_exevo_auctions(
+        current_page: int = Query(0, alias="currentPage", ge=0),
+        page_size: int = Query(50, alias="pageSize", ge=1, le=100),
+        auction_ids: list[int] = Query(default=[], alias="auctionIds"),
+        battleye: list[bool] = Query(default=[]),
+        location: list[int] = Query(default=[]),
+        max_level: Optional[int] = Query(None, alias="maxLevel"),
+        min_level: Optional[int] = Query(None, alias="minLevel"),
+        min_skill: Optional[int] = Query(None, alias="minSkill"),
+        pvp: list[int] = Query(default=[]),
+        server_set: list[str] = Query(default=[], alias="serverSet"),
+        skill_key: list[str] = Query(default=[], alias="skillKey"),
+        transfer_available: Optional[bool] = Query(None, alias="transferAvailable"),
+        vocation: list[int] = Query(default=[]),
+        history: bool = Query(False),
+        nickname: Optional[str] = Query(None, alias="nicknameFilter"),
+) -> dict:
+    snapshot = app.state.bazaar
+    results = [] if history else filter_auctions(
+        snapshot["auctions"],
+        auction_ids=auction_ids,
+        battleye=battleye,
+        location=location,
+        max_level=max_level,
+        min_level=min_level,
+        min_skill=min_skill,
+        pvp=pvp,
+        server_set=server_set,
+        skill_key=skill_key,
+        transfer_available=transfer_available,
+        vocation=vocation,
+        nickname=nickname,
+    )
+    if auction_ids and len(results) < len(set(auction_ids)):
+        # Not in the snapshot (new, ended or not synced yet): fetch the missing ones live.
+        found = {a["id"] for a in results}
+        for auction_id in set(auction_ids) - found:
+            response = await app.state.client.fetch_auction(auction_id)
+            auction = response.data
+            if auction is not None:
+                results.append(auction_to_exevo(auction, snapshot["worlds"].get(auction.world)))
+    return build_response(results, current_page, page_size)
 
 
 # endregion
