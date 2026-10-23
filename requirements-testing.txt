@@ -2,3 +2,4 @@ aioresponses
 asynctest
 coverage[toml]
 packaging
+aiohttp<3.14
