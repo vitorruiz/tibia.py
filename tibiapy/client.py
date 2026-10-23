@@ -1674,7 +1674,7 @@ class Client:
                 await self._fetch_all_pages(auction_id, auction.details.store_outfits, 5, test=test)
 
             if fetch_familiars:
-                await self._fetch_all_pages(auction_id, auction.details.outfits, 6, test=test)
+                await self._fetch_all_pages(auction_id, auction.details.familiars, 6, test=test)
 
         return tibia_response
 

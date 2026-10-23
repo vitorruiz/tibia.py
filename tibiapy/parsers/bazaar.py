@@ -362,7 +362,7 @@ class AuctionParser:
 
         """
         details_tables = parsed_content.select("div.CharacterDetailsBlock")
-        return {table["id"]: table for table in details_tables}
+        return {table["id"]: table for table in details_tables if table.get("id")}
 
     @classmethod
     def _parse_data_table(cls, table: bs4.Tag) -> dict[str, str]:
