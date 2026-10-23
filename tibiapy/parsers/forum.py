@@ -202,14 +202,21 @@ class ForumSectionParser:
             raise InvalidContentError("Boards table not found.")
 
         rows = tables["Boards"].select("table.TableContent > tr:not(.LabelH)")
-        section_link = parse_link_info(parsed_content.select_one("p.ForumWelcome > a"))
-        redirect = section_link["query"]["redirect"]
-        redirect_qs = urllib.parse.parse_qs(urllib.parse.urlparse(redirect).query)
-        section_id = redirect_qs["sectionid"][0]
+        section_id = 0
+        welcome_link = parsed_content.select_one("p.ForumWelcome > a")
+        if welcome_link:
+            section_link = parse_link_info(welcome_link)
+            if "sectionid" in section_link["query"]:
+                section_id = int(section_link["query"]["sectionid"])
+            elif "redirect" in section_link["query"]:
+                redirect = section_link["query"]["redirect"]
+                redirect_qs = urllib.parse.parse_qs(urllib.parse.urlparse(redirect).query)
+                if "sectionid" in redirect_qs:
+                    section_id = int(redirect_qs["sectionid"][0])
         time_label = parsed_content.select_one("div.CurrentTime")
         offset = 2 if "CEST" in time_label.text else 1
         boards = [board for row in rows if (board := cls._parse_board_row(row, offset)) is not None]
-        return ForumSection(section_id=int(section_id), entries=boards)
+        return ForumSection(section_id=section_id, entries=boards)
 
     @classmethod
     def _parse_board_row(cls, board_row: bs4.Tag, offset: int = 1) -> Optional[BoardEntry]:
