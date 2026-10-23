@@ -38,6 +38,7 @@ from tibiapy.models import (
     BossEntry,
     Character,
     CharacterBazaar,
+    CMPostArchive,
     Creature,
     CreatureEntry,
     CreaturesSection,
@@ -394,6 +395,17 @@ async def get_forum_thread(
         page: int = Query(1),
 ) -> TibiaResponse[Optional[ForumThread]]:
     return await app.state.client.fetch_forum_thread(thread_id=thread_id, page=page)
+
+
+@app.get("/forums/cm-post-archive/{fromDate}/{toDate}", tags=["Forums"],
+         summary="Get CM Post Archive between dates")
+async def get_cm_post_archive(
+        from_date: datetime.date = Path(..., alias="fromDate", description="The start date of the search."),
+        to_date: datetime.date = Path(..., alias="toDate", description="The end date of the search."),
+        page: int = Query(1, ge=1, description="The page to display."),
+) -> TibiaResponse[CMPostArchive]:
+    """Get the CM Post Archive for a given date range."""
+    return await app.state.client.fetch_cm_post_archive(from_date, to_date, page)
 
 
 # endregion
