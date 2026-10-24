@@ -1,10 +1,9 @@
 name: 🗃️ Bazaar snapshot
 
-# The server save happens at 10:00 CET/CEST (08:00 or 09:00 UTC). The job runs hourly afterwards and exits early when
-# the snapshot is already up to date or the bazaar hasn't processed the server save yet (delays, maintenance).
+# Manual only. Tibia.com answers 403 to the IPs of GitHub-hosted runners, so the daily snapshot is built by
+# scripts/bazaar_sync_local.sh on a regular connection (see scripts/launchd). This workflow is kept for self-hosted
+# runners or runs behind a proxy: change `runs-on` accordingly.
 on:
-  schedule:
-    - cron: "15 9-17 * * *"
   workflow_dispatch:
     inputs:
       force:
