@@ -20,20 +20,30 @@ __all__ = (
     "SERVER_SAVE_TIMEZONE",
     "auction_to_exevo",
     "build_response",
+    "compute_tags",
     "dump_snapshot",
     "filter_auctions",
     "last_server_save",
     "load_snapshot",
+    "normalize_auction",
     "world_to_server_data",
 )
 
 SERVER_SAVE_TIMEZONE = ZoneInfo("Europe/Berlin")
 SERVER_SAVE_HOUR = 10
 
-MANY_CHARMS = 15
-MANY_QUESTS = 40
-MANY_STORE_COSMETICS = 10
-SECONDARY_SKILL_MIN = 90.0
+# Thresholds of the character tags, matching the open source Exevo Pan implementation.
+CHARM_CHECK = 7
+QUEST_CHECK = 26
+MOUNT_CHECK = 35
+STORE_CHECK = 4
+HIGH_SKILL_VALUE = 100
+SOULWAR_MIN_LEVEL = 400
+
+RARE_MOUNTS = frozenset({
+    "Rift Runner", "Phantasmal Jade", "Singeing Steed", "Neon Sparkid", "Vortexion", "Phant", "Antelope",
+    "Fleeting Knowledge", "Ripptor",
+})
 
 VOCATION_IDS = {
     Vocation.NONE: 0,
@@ -64,6 +74,10 @@ PVP_IDS = {
     PvpType.RETRO_HARDCORE_PVP: 4,
 }
 
+# Strings displayed by the app: the flag is chosen from the location string.
+LOCATION_STRINGS = {0: "EU", 1: "NA", 2: "BR", 3: "OCE"}
+PVP_STRINGS = {0: "Optional", 1: "Open", 2: "Retro Open", 3: "Hardcore", 4: "Retro Hardcore"}
+
 SKILL_KEYS = {
     "axe": "axe",
     "club": "club",
@@ -88,14 +102,18 @@ def last_server_save(now: Optional[datetime.datetime] = None) -> datetime.dateti
     return save.astimezone(datetime.timezone.utc)
 
 
+def _typed(type_id: int, strings: dict[int, str]) -> dict[str, Any]:
+    return {"type": type_id, "string": strings.get(type_id, "")}
+
+
 def world_to_server_data(world: WorldEntry) -> dict[str, Any]:
     """Convert a world into the ``serverData`` object of Exevo Pan."""
     return {
         "battleye": world.battleye_type == BattlEyeType.INITIALLY_PROTECTED,
         "experimental": world.is_experimental,
-        "pvpType": {"type": PVP_IDS.get(world.pvp_type, 0), "string": world.pvp_type.value},
+        "pvpType": _typed(PVP_IDS.get(world.pvp_type, 0), PVP_STRINGS),
         "serverId": 0,
-        "serverLocation": {"type": LOCATION_IDS.get(world.location, 0), "string": world.location.value},
+        "serverLocation": _typed(LOCATION_IDS.get(world.location, 0), LOCATION_STRINGS),
         "serverName": world.name,
     }
 
@@ -132,27 +150,51 @@ def _gems(auction: Auction) -> tuple[dict[str, int], list[str]]:
     return counts, greater_mods
 
 
-def _tags(auction: Auction, skills: dict[str, float]) -> list[str]:
-    details = auction.details
-    if details is None:
-        return []
+def _is_rare_outfit(name: str, addons: int, sex: bool) -> bool:
+    return (
+        (name == "Mage" and not sex and addons >= 2)
+        or (name == "Summoner" and sex and addons >= 2)
+        or (name in ("Elementalist", "Revenant", "Battle Mage") and addons > 0)
+        or (name == "Demon Outfit" and addons >= 2)
+        or (name == "Fire-Fighter" and addons in (1, 3))
+        or name in ("Golden Outfit", "Makeshift Warrior", "Royal Costume")
+    )
+
+
+def compute_tags(auction: dict[str, Any]) -> list[str]:
+    """Compute the character tags of an auction in the Exevo Pan format, from its stored fields."""
+    outfits = auction.get("outfits", [])
+    skills = auction.get("skills", {})
     tags = []
-    quests = [q.lower() for q in details.completed_quest_lines]
-    if any("soul war" in q for q in quests):
-        tags.append("soulwarAvailable")
-    if any("primal" in q for q in quests):
-        tags.append("primalAvailable")
-    if len(details.charms) >= MANY_CHARMS:
+    if len(auction.get("charms", [])) >= CHARM_CHECK:
         tags.append("manyCharms")
-    if len(quests) >= MANY_QUESTS:
+    if len(auction.get("quests", [])) >= QUEST_CHECK:
         tags.append("manyQuests")
-    if len(details.store_mounts.entries) + len(details.store_outfits.entries) >= MANY_STORE_COSMETICS:
+    if len(auction.get("mounts", [])) >= MOUNT_CHECK:
+        tags.append("manyMounts")
+    if len(auction.get("storeOutfits", [])) + len(auction.get("storeMounts", [])) >= STORE_CHECK:
         tags.append("manyStoreCosmetics")
-    if VOCATION_IDS.get(auction.vocation) == 1:
-        weapons = sorted((skills["axe"], skills["club"], skills["sword"]), reverse=True)
-        if weapons[1] >= SECONDARY_SKILL_MIN:
-            tags.append("secondaryEkSkill")
+    if any(mount in RARE_MOUNTS for mount in auction.get("mounts", [])):
+        tags.append("rareMounts")
+    if any(_is_rare_outfit(o["name"], o["type"], auction["sex"]) for o in outfits):
+        tags.append("rareOutfits")
+    if auction["vocationId"] == 1 and sum(skills.get(k, 0) >= HIGH_SKILL_VALUE for k in ("axe", "club", "sword")) >= 2:
+        tags.append("secondaryEkSkill")
+    if auction["level"] >= SOULWAR_MIN_LEVEL and not any(o["name"] == "Revenant" for o in outfits):
+        tags.append("soulwarAvailable")
     return tags
+
+
+def normalize_auction(auction: dict[str, Any]) -> dict[str, Any]:
+    """Bring an auction loaded from a snapshot up to date with the current display strings and tag rules."""
+    server = auction.get("serverData", {})
+    if "pvpType" in server:
+        server["pvpType"]["string"] = PVP_STRINGS.get(server["pvpType"]["type"], server["pvpType"].get("string", ""))
+    if "serverLocation" in server:
+        location = server["serverLocation"]
+        location["string"] = LOCATION_STRINGS.get(location["type"], location.get("string", ""))
+    auction["tags"] = compute_tags(auction) if auction.get("detailed") else []
+    return auction
 
 
 def auction_to_exevo(auction: Auction, server_data: Optional[dict[str, Any]] = None) -> dict[str, Any]:
@@ -168,7 +210,7 @@ def auction_to_exevo(auction: Auction, server_data: Optional[dict[str, Any]] = N
     now = datetime.datetime.now(datetime.timezone.utc)
     transfer_date = details.regular_world_transfer_available_date if details else None
     has_transfer = details is not None and (transfer_date is None or _as_utc(transfer_date) <= now)
-    return {
+    result = {
         "id": auction.auction_id,
         "nickname": auction.name,
         "level": auction.level,
@@ -207,11 +249,13 @@ def auction_to_exevo(auction: Auction, server_data: Optional[dict[str, Any]] = N
         "storeItems": [{"name": i.name, "amount": i.count} for i in details.store_items.entries] if details else [],
         "storeMounts": [m.name for m in details.store_mounts.entries] if details else [],
         "storeOutfits": [{"name": o.name, "type": o.addons} for o in details.store_outfits.entries] if details else [],
-        "tags": _tags(auction, skills),
+        "tags": [],
         "tcInvested": 0,
         "transfer": has_transfer,
         "serverId": 0,
     }
+    result["tags"] = compute_tags(result) if details else []
+    return result
 
 
 def _as_utc(value: datetime.datetime) -> datetime.datetime:
@@ -226,10 +270,13 @@ def dump_snapshot(snapshot: dict[str, Any]) -> bytes:
 
 
 def load_snapshot(data: bytes) -> dict[str, Any]:
-    """Load a snapshot from gzipped (or plain) JSON bytes."""
+    """Load a snapshot from gzipped (or plain) JSON bytes, normalizing its auctions."""
     if data[:2] == b"\x1f\x8b":
         data = gzip.decompress(data)
-    return json.loads(data)
+    snapshot = json.loads(data)
+    for auction in snapshot.get("auctions", []):
+        normalize_auction(auction)
+    return snapshot
 
 
 def filter_auctions(  # noqa: PLR0912
@@ -241,6 +288,9 @@ def filter_auctions(  # noqa: PLR0912
         max_level: Optional[int] = None,
         min_level: Optional[int] = None,
         min_skill: Optional[int] = None,
+        max_skill: Optional[int] = None,
+        sorting_mode: int = 0,
+        descending: bool = False,
         pvp: Optional[list[int]] = None,
         server_set: Optional[list[str]] = None,
         skill_key: Optional[list[str]] = None,
@@ -251,7 +301,7 @@ def filter_auctions(  # noqa: PLR0912
 ) -> list[dict[str, Any]]:
     """Filter auctions with the same semantics of the Exevo Pan ``/auctions`` endpoint.
 
-    Ended auctions are always left out. Results are sorted by end date, soonest first.
+    Ended auctions are always left out. ``sorting_mode`` is 0 for the end date, 1 for the level and 2 for the bid.
     """
     now_ts = (now or datetime.datetime.now(datetime.timezone.utc)).timestamp()
     ids = set(auction_ids or [])
@@ -279,29 +329,38 @@ def filter_auctions(  # noqa: PLR0912
             continue
         if max_level is not None and auction["level"] > max_level:
             continue
-        if min_skill is not None and keys and not any(auction["skills"].get(k, 0) >= min_skill for k in keys):
+        if keys and (min_skill is not None or max_skill is not None) and not any(
+                (min_skill or 0) <= auction["skills"].get(k, 0) <= (max_skill if max_skill is not None else float("inf"))
+                for k in keys):
             continue
         if transfer_available is not None and auction.get("transfer") != transfer_available:
             continue
         if needle and needle not in auction["nickname"].lower():
             continue
         results.append(auction)
-    results.sort(key=lambda a: a["auctionEnd"])
+    sort_keys = {0: "auctionEnd", 1: "level", 2: "currentBid"}
+    results.sort(key=lambda a: a[sort_keys.get(sorting_mode, "auctionEnd")], reverse=descending)
     return results
 
 
-def build_response(results: list[dict[str, Any]], page: int, page_size: int) -> dict[str, Any]:
+def build_response(
+        results: list[dict[str, Any]],
+        page: int,
+        page_size: int,
+        sorting_mode: int = 0,
+        descending: bool = False,
+) -> dict[str, Any]:
     """Paginate the results (zero-based page) in the Exevo Pan response format."""
     start = page * page_size
     end = min(start + page_size, len(results))
     return {
-        "descendingOrder": False,
+        "descendingOrder": descending,
         "endOffset": end,
         "hasNext": end < len(results),
         "hasPrev": page > 0,
         "page": results[start:end],
         "pageIndex": page,
-        "sortingMode": 0,
-        "startOffset": start,
+        "sortingMode": sorting_mode,
+        "startOffset": start + 1,
         "totalItems": len(results),
     }

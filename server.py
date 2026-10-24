@@ -556,6 +556,9 @@ async def get_exevo_auctions(
         max_level: Optional[int] = Query(None, alias="maxLevel"),
         min_level: Optional[int] = Query(None, alias="minLevel"),
         min_skill: Optional[int] = Query(None, alias="minSkill"),
+        max_skill: Optional[int] = Query(None, alias="maxSkill"),
+        sorting_mode: int = Query(0, alias="sortingMode", ge=0, le=2),
+        descending: bool = Query(False, alias="descendingOrder"),
         pvp: list[int] = Query(default=[]),
         server_set: list[str] = Query(default=[], alias="serverSet"),
         skill_key: list[str] = Query(default=[], alias="skillKey"),
@@ -573,6 +576,9 @@ async def get_exevo_auctions(
         max_level=max_level,
         min_level=min_level,
         min_skill=min_skill,
+        max_skill=max_skill,
+        sorting_mode=sorting_mode,
+        descending=descending,
         pvp=pvp,
         server_set=server_set,
         skill_key=skill_key,
@@ -588,7 +594,7 @@ async def get_exevo_auctions(
             auction = response.data
             if auction is not None:
                 results.append(auction_to_exevo(auction, snapshot["worlds"].get(auction.world)))
-    return build_response(results, current_page, page_size)
+    return build_response(results, current_page, page_size, sorting_mode, descending)
 
 
 # endregion
