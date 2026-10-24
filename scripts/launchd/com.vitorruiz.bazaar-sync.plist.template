@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.vitorruiz.bazaar-sync</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__REPO_ROOT__/scripts/bazaar_sync_local.sh</string>
+    </array>
+    <!-- Hourly and at login. Runs missed while the Mac was asleep fire on wake. The script is a no-op when up to date. -->
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/bazaar-sync.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/bazaar-sync.log</string>
+</dict>
+</plist>
