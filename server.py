@@ -79,6 +79,8 @@ log.setLevel(logging.DEBUG)
 
 BAZAAR_SNAPSHOT_URL = os.environ.get("BAZAAR_SNAPSHOT_URL", "")
 BAZAAR_REFRESH_SECONDS = 3600
+BAZAAR_DOWNLOAD_TIMEOUT = 60
+BAZAAR_MAX_HEADER_SIZE = 65536
 
 
 async def refresh_bazaar_snapshot(app: FastAPI) -> None:
@@ -88,7 +90,10 @@ async def refresh_bazaar_snapshot(app: FastAPI) -> None:
     try:
         if BAZAAR_SNAPSHOT_URL.startswith(("http://", "https://")):
             headers = {"If-None-Match": app.state.bazaar_etag} if app.state.bazaar_etag else {}
-            async with aiohttp.ClientSession() as session, session.get(BAZAAR_SNAPSHOT_URL, headers=headers) as resp:
+            # GitHub redirects release downloads with a Content-Security-Policy header larger than aiohttp's default limit.
+            timeout = aiohttp.ClientTimeout(total=BAZAAR_DOWNLOAD_TIMEOUT)
+            async with aiohttp.ClientSession(max_field_size=BAZAAR_MAX_HEADER_SIZE, timeout=timeout) as session, \
+                    session.get(BAZAAR_SNAPSHOT_URL, headers=headers) as resp:
                 if resp.status == status.HTTP_304_NOT_MODIFIED:
                     return
                 resp.raise_for_status()
