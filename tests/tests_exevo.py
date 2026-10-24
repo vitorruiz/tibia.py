@@ -1,8 +1,8 @@
 import datetime
 
 from tests.tests_tibiapy import TestCommons
-from tibiapy.exevo import auction_to_exevo, build_response, dump_snapshot, filter_auctions, last_server_save, \
-    load_snapshot
+from tibiapy.exevo import auction_to_exevo, build_response, compute_tags, dump_snapshot, filter_auctions, \
+    last_server_save, load_snapshot, normalize_auction
 from tibiapy.parsers import AuctionParser, CharacterBazaarParser
 
 FILE_BAZAAR_CURRENT = "characterBazaar/bazaarCurrentAuctions.txt"
@@ -68,10 +68,60 @@ class TestExevo(TestCommons):
         self.assertEqual([], result["charms"])
         self.assertFalse(result["transfer"])
 
-    def test_snapshot_round_trip(self):
-        snapshot = {"complete": True, "auctions": [make_auction(1)]}
+    def test_snapshot_round_trip_normalizes_auctions(self):
+        auction = make_auction(1)
+        auction["detailed"] = True
+        auction.update({"sex": True, "charms": [], "quests": [], "mounts": [], "outfits": [], "storeMounts": [],
+                        "storeOutfits": []})
+        snapshot = {"complete": True, "auctions": [auction]}
 
-        self.assertEqual(snapshot, load_snapshot(dump_snapshot(snapshot)))
+        loaded = load_snapshot(dump_snapshot(snapshot))
+
+        self.assertTrue(loaded["complete"])
+        self.assertEqual([1], [a["id"] for a in loaded["auctions"]])
+        server = loaded["auctions"][0]["serverData"]
+        self.assertEqual("Open", server["pvpType"]["string"])
+        self.assertEqual("EU", server["serverLocation"]["string"])
+
+    def test_normalize_auction_uses_app_location_strings(self):
+        for location_type, expected in ((0, "EU"), (1, "NA"), (2, "BR"), (3, "OCE")):
+            auction = make_auction(1)
+            auction["serverData"]["serverLocation"] = {"type": location_type, "string": "whatever"}
+
+            normalize_auction(auction)
+
+            self.assertEqual(expected, auction["serverData"]["serverLocation"]["string"])
+
+    def test_compute_tags_follows_exevo_rules(self):
+        auction = make_auction(1, level=400, vocationId=1, sex=True)
+        auction.update({
+            "skills": {"axe": 100.0, "club": 100.0, "sword": 50.0},
+            "charms": ["c"] * 7,
+            "quests": ["q"] * 26,
+            "mounts": ["Rift Runner"] + ["m"] * 34,
+            "storeMounts": ["a", "b"],
+            "storeOutfits": [{"name": "x", "type": 0}, {"name": "y", "type": 0}],
+            "outfits": [{"name": "Golden Outfit", "type": 0}],
+        })
+
+        tags = compute_tags(auction)
+
+        self.assertEqual({"manyCharms", "manyQuests", "manyMounts", "manyStoreCosmetics", "rareMounts", "rareOutfits",
+                          "secondaryEkSkill", "soulwarAvailable"}, set(tags))
+
+    def test_compute_tags_below_thresholds(self):
+        auction = make_auction(1, level=399, vocationId=4, sex=False)
+        auction.update({"charms": ["c"] * 6, "quests": ["q"] * 25, "mounts": [], "storeMounts": [], "storeOutfits": [],
+                        "outfits": []})
+
+        self.assertEqual([], compute_tags(auction))
+
+    def test_compute_tags_soulwar_requires_no_revenant_outfit(self):
+        auction = make_auction(1, level=500, sex=True)
+        auction.update({"charms": [], "quests": [], "mounts": [], "storeMounts": [], "storeOutfits": [],
+                        "outfits": [{"name": "Revenant", "type": 0}]})
+
+        self.assertNotIn("soulwarAvailable", compute_tags(auction))
 
     def test_last_server_save(self):
         # 10:00 CEST is 08:00 UTC in summer, 10:00 CET is 09:00 UTC in winter.
@@ -137,3 +187,21 @@ class TestExevo(TestCommons):
         self.assertFalse(last["hasNext"])
         self.assertTrue(last["hasPrev"])
         self.assertEqual(5, last["endOffset"])
+        self.assertEqual(1, first["startOffset"])
+        self.assertEqual(5, last["startOffset"])
+
+    def test_filter_auctions_sorting_modes(self):
+        auctions = [make_auction(1, level=300, currentBid=50), make_auction(2, level=100, currentBid=900),
+                    make_auction(3, level=200, currentBid=10)]
+
+        self.assertEqual([1, 2, 3], [a["id"] for a in filter_auctions(auctions, sorting_mode=0)])
+        self.assertEqual([2, 3, 1], [a["id"] for a in filter_auctions(auctions, sorting_mode=1)])
+        self.assertEqual([3, 1, 2], [a["id"] for a in filter_auctions(auctions, sorting_mode=2)])
+        self.assertEqual([2, 1, 3], [a["id"] for a in filter_auctions(auctions, sorting_mode=2, descending=True)])
+
+    def test_filter_auctions_skill_range(self):
+        auctions = [make_auction(1, skills={"sword": 80.0}), make_auction(2, skills={"sword": 120.0})]
+
+        self.assertEqual([1], [a["id"] for a in filter_auctions(auctions, skill_key=["sword"], max_skill=100)])
+        self.assertEqual([2], [a["id"] for a in filter_auctions(auctions, skill_key=["sword"], min_skill=100)])
+        self.assertEqual([1, 2], [a["id"] for a in filter_auctions(auctions, skill_key=["sword"], min_skill=10)])
