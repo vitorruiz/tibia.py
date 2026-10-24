@@ -750,6 +750,8 @@ class AuctionParser:
         _, *rows = get_rows(table_content)
         for row in rows:
             gem_tag = row.select_one("div.Gem")
+            if gem_tag is None or not gem_tag.get("title"):
+                continue
             gem_type = gem_tag["title"]
             effects = [t.text for t in row.select("span")]
             builder.add_revealed_gem(RevealedGem(

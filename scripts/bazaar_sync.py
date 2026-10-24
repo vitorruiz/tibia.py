@@ -184,6 +184,13 @@ async def run(args: argparse.Namespace) -> bool:
             except NetworkError as e:
                 log.warning("Skipping auction %d: %s", summary.auction_id, e)
                 continue
+            except Exception:  # noqa: BLE001
+                # A page the parser can't handle must not take down the whole run. The auction keeps its summary
+                # data, is flagged so it doesn't block completion, and is retried on the next run.
+                log.exception("Could not parse auction %d", summary.auction_id)
+                result[summary.auction_id]["detailFailed"] = True
+                fetched += 1
+                continue
             if detailed is not None:
                 result[summary.auction_id] = auction_to_exevo(detailed, worlds.get(detailed.world))
             fetched += 1
@@ -193,7 +200,7 @@ async def run(args: argparse.Namespace) -> bool:
     finally:
         await client.session.close()
 
-    complete = all(a["detailed"] for a in result.values())
+    complete = all(a["detailed"] or a.get("detailFailed") for a in result.values())
     args.out.write_bytes(dump_snapshot(_snapshot(save, worlds, result, complete)))
     log.info("Wrote %s (complete=%s, %d auctions)", args.out, complete, len(result))
     return complete
